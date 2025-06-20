@@ -9,6 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     <style>
         /* Global CSS Variables for Theming */
@@ -217,6 +219,9 @@
             color: var(--accent-color);
             margin-bottom: 18px;
             font-weight: 600;
+            display: flex; /* For icon alignment */
+            align-items: center;
+            gap: 10px; /* Space between icon and text */
         }
         .tool-card ul {
             list-style: none;
@@ -241,6 +246,7 @@
             padding-right: 5px;
         }
 
+
         /* Buttons */
         button, .summary-tool button:not(.back-to-options-btn), .validator-tool button:not(.back-to-options-btn) {
             padding: 12px 25px;
@@ -252,6 +258,10 @@
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 3px 8px var(--shadow-light);
             color: white; /* Default to white text for primary buttons */
+            display: inline-flex; /* For icon alignment */
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Space between icon and text */
         }
 
         .tool-card button, .summary-tool button:not(.back-to-options-btn), .validator-tool button:not(.back-to-options-btn) {
@@ -330,6 +340,9 @@
             transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
             font-weight: 500;
             margin-right: 15px; /* Move slightly left */
+            display: flex; /* For icon alignment */
+            align-items: center;
+            gap: 5px;
         }
         .global-dark-mode-toggle:hover {
             background-color: var(--button-secondary-hover);
@@ -795,6 +808,17 @@
             transition: width 0.3s ease;
         }
 
+        /* Fade-in animation for sections */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .fade-in-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
 
         /* Responsiveness */
         @media (max-width: 768px) {
@@ -846,16 +870,18 @@
     <!-- Initial Startup Options -->
     <div id="startupOptions" class="nav-buttons-container">
         <!-- Dark Mode Toggle (now global) -->
-        <button id="globalDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
+        <button id="globalDarkModeToggle" class="global-dark-mode-toggle">
+            <span class="icon"></span> <span>Dark Mode</span>
+        </button>
         <div class="app-header">
-            <h1>📦 Order Management Tool — Premier Packaging</h1>
+            <h1>📦 Order Management Suite</h1>
             <p>The Order Management Tool is a web-based solution designed for the Premier Packaging project under ActioHX. It streamlines daily order tracking, performance analytics, and data validation — all in a single interface.</p>
             <p>Built with modern web technologies, this lightweight yet powerful tool enables the Operations team to visualize, validate, and export order data with zero installation and 100% browser-based execution.</p>
         </div>
 
         <div class="tool-selection">
             <div class="tool-card">
-                <h2>📊 SummaryX</h2>
+                <h2><span class="icon" data-lucide="bar-chart-2"></span> SummaryX</h2>
                 <ul>
                     <li>Generate detailed performance reports by assignee.</li>
                     <li>Identify single vs. multi-line orders.</li>
@@ -864,28 +890,34 @@
                     <li>Export comprehensive Excel reports.</li>
                     <li>Time-based Order Trends & Peak Performance Analysis.</li>
                 </ul>
-                <button onclick="launchToolWithLoader('summary')">Launch Summary Tool</button>
+                <button onclick="launchToolWithLoader('summary')">
+                    <span class="icon" data-lucide="play"></span> Launch Summary Tool
+                </button>
             </div>
             <div class="tool-card">
-                <h2>✅ ValidatorPro</h2>
+                <h2><span class="icon" data-lucide="check-circle"></span> ValidatorPro</h2>
                 <ul>
                     <li>Detect errors in batch time vs. order status logic.</li>
                     <li>Identify missing or incorrect “Reason for Pending.”</li>
                     <li>Highlights discrepancies for easy review.</li>
                     <li>Exports a clean error report in tabular format.</li>
                 </ul>
-                <button onclick="launchToolWithLoader('validation')">Launch Validation Tool</button>
+                <button onclick="launchToolWithLoader('validation')">
+                    <span class="icon" data-lucide="play"></span> Launch Validation Tool
+                </button>
             </div>
             <!-- New Guide Book Card -->
             <div class="tool-card">
-                <h2>📖 Guide Book</h2>
+                <h2><span class="icon" data-lucide="book-open"></span> Guide Book</h2>
                 <ul>
                     <li>Learn how to use SummaryX and ValidatorPro.</li>
                     <li>Understand expected data formats and features.</li>
                     <li>Get tips for optimal tool usage.</li>
                     <li>Quick start for new users.</li>
                 </ul>
-                <button onclick="showGuideBook()">Open Guide Book</button>
+                <button onclick="showGuideBook()">
+                    <span class="icon" data-lucide="book"></span> Open Guide Book
+                </button>
             </div>
         </div>
         <footer class="startup-footer">
@@ -907,10 +939,14 @@
 
     <!-- Guide Book Section -->
     <div id="guideBook" class="tool-container" style="display: none;">
-        <button onclick="showOptions()" class="back-to-options-btn">← Back to Options</button>
-        <button id="guideDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
+        <button onclick="showOptions()" class="back-to-options-btn">
+            <span class="icon" data-lucide="arrow-left"></span> Back to Options
+        </button>
+        <button id="guideDarkModeToggle" class="global-dark-mode-toggle">
+            <span class="icon"></span> <span>Dark Mode</span>
+        </button>
         <div class="container container-guide">
-            <h1 style="display: flex; align-items: center; gap: 10px;">📖 Guide Book</h1>
+            <h1 style="display: flex; align-items: center; gap: 10px;"><span class="icon" data-lucide="book-open"></span> Guide Book</h1>
             <p style="margin-bottom: 25px; color: var(--light-text-color);">A comprehensive guide to using the Order Management Tool's features effectively.</p>
 
             <div class="guide-content-section">
@@ -921,7 +957,9 @@
 
             <div class="guide-content-section">
                 <h2>✨ Key Features</h2>
-                <h3 style="color: var(--accent-color);">🔹 SummaryX (Order Summary Tool)</h3>
+                <h3 style="color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
+                    <span class="icon" data-lucide="bar-chart-2"></span> SummaryX (Order Summary Tool)
+                </h3>
                 <ul>
                     <li>Generate detailed performance reports by assignee.</li>
                     <li>Identify single vs. multi-line orders.</li>
@@ -931,7 +969,9 @@
                     <li>Time-based Order Trends & Peak Performance Analysis.</li>
                 </ul>
 
-                <h3 style="color: var(--accent-color);">🔸 ValidatorPro (Order Validation Tool)</h3>
+                <h3 style="color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
+                    <span class="icon" data-lucide="check-circle"></span> ValidatorPro (Order Validation Tool)
+                </h3>
                 <ul>
                     <li>Detect errors in batch time vs. order status logic.</li>
                     <li>Identify missing or incorrect “Reason for Pending.”</li>
@@ -941,7 +981,7 @@
             </div>
 
             <div class="guide-content-section">
-                <h2>🔄 How to Use</h2>
+                <h2><span class="icon" data-lucide="rotate-ccw"></span> How to Use</h2>
                 <ol>
                     <li><strong>Upload Data:</strong> Drag & Drop or upload your Excel/CSV order data into the designated area. You can also paste CSV data directly into the text area.</li>
                     <li><strong>Choose the Tool:</strong> From the main startup page, select either "Summary Tool" for analytics or "Validation Tool" for error detection.</li>
@@ -961,15 +1001,19 @@
 
     <!-- Order Summary Tool Section -->
     <div id="summaryTool" class="tool-container summary-tool" style="display: none;">
-        <button onclick="showOptions()" class="back-to-options-btn">← Back to Options</button>
+        <button onclick="showOptions()" class="back-to-options-btn">
+            <span class="icon" data-lucide="arrow-left"></span> Back to Options
+        </button>
         <!-- Dark Mode Toggle (now global and positioned within the tool) -->
-        <button id="summaryDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
+        <button id="summaryDarkModeToggle" class="global-dark-mode-toggle">
+            <span class="icon"></span> <span>Dark Mode</span>
+        </button>
         <div class="main-container" id="summaryMainContainer">
             <div class="container container-summary">
                 <div class="header-section">
                     <div>
                         <h1 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                            📊 SummaryX
+                            <span class="icon" data-lucide="bar-chart-2"></span> SummaryX
                         </h1>
                         <p style="margin: 5px 0 0 0; color: var(--light-text-color); font-size: 1em; transition: color 0.3s ease;">
                             Enhanced with Smart Analytics & Offline Features
@@ -984,7 +1028,7 @@
                         </p>
                         <input type="file" id="summaryFileInput" accept=".xlsx,.xls,.csv" class="file-input-hidden">
                         <button type="button" class="drop-zone-button" onclick="document.getElementById('summaryFileInput').click()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-cloud"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                            <span class="icon" data-lucide="upload-cloud"></span>
                             Choose File
                         </button>
                         <div id="summaryFileNameDisplay" class="file-name-display"></div> <!-- Added for file name display -->
@@ -992,7 +1036,9 @@
                         <textarea id="summaryManualInput" rows="8" placeholder="Paste your CSV data here (with headers)&#10;&#10;Expected columns: Order#, Line, Assigned_To, Status, Type, Order Date&#10;&#10;Example:&#10;Order#,Line,Assigned_To,Status,Type,Order Date&#10;12345,1,John Doe,Awaiting Response,AIR,2024-01-15&#10;12345,2,John Doe,In Progress,AIR,2024-01-15"></textarea>
                         
                     </div>
-                    <button onclick="triggerSummaryAnalysis()">📝 Process Data</button>
+                    <button onclick="triggerSummaryAnalysis()">
+                        <span class="icon" data-lucide="file-text"></span> Process Data
+                    </button>
                 </div>
 
                 <div id="summaryProcessing" class="processing">
@@ -1008,38 +1054,44 @@
 
                 <div id="summaryMessages"></div>
 
-                <div id="summaryControls" style="display: none; padding: 25px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--container-bg); box-shadow: 0 2px 10px var(--shadow-light); margin-bottom: 25px;">
+                <div id="summaryControls" class="fade-in-section" style="display: none; padding: 25px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--container-bg); box-shadow: 0 2px 10px var(--shadow-light); margin-bottom: 25px;">
                     <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px;">
                         <select id="summaryExportTypeSelector" style="flex: 1; min-width: 180px;">
                             <option value="">Select Report Type</option>
                             <option value="all">📤 Export All Users Data</option>
                             <option value="status">📊 Export Status-wise Data</option>
                         </select>
-                        <button onclick="handleSummaryExport()" class="export-btn" style="flex-grow: 0;">⬇️ Export</button>
+                        <button onclick="handleSummaryExport()" class="export-btn" style="flex-grow: 0;">
+                            <span class="icon" data-lucide="download"></span> Export
+                        </button>
                         <!-- New button for showing trends -->
                         <button onclick="showTimeBasedTrends()" style="flex-grow: 0; background-color: var(--button-secondary-bg);">
-                            📊 Show Trend Analysis
+                            <span class="icon" data-lucide="trending-up"></span> Show Trend Analysis
                         </button>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
                         <input type="text" id="summaryNameInput" list="summaryNameSuggestions" placeholder="Type name to search for report..." style="flex: 1; min-width: 180px;">
                         <datalist id="summaryNameSuggestions"></datalist>
-                        <button onclick="searchSummaryReportByName()" style="flex-grow: 0;">🔍 Search Report</button>
-                        <button onclick="clearSummaryReportSearch()">🔄 Reset Search</button>
+                        <button onclick="searchSummaryReportByName()" style="flex-grow: 0;">
+                            <span class="icon" data-lucide="search"></span> Search Report
+                        </button>
+                        <button onclick="clearSummaryReportSearch()">
+                            <span class="icon" data-lucide="rotate-ccw"></span> Reset Search
+                        </button>
                     </div>
                 </div>
                 <!-- 🏆 Top Performer Leaderboard -->
-                <div id="summaryTopPerformers" style="margin: 25px 0; display: none;">
-                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;">🏆 Top Performers</h3>
+                <div id="summaryTopPerformers" class="fade-in-section" style="margin: 25px 0; display: none;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="trophy"></span> Top Performers</h3>
                     <div id="summaryLeaderboardContainer" class="stats"></div>
                     <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-color); transition: border-color 0.3s ease;">
                 </div>
 
-                <div id="summaryOutput"></div>
+                <div id="summaryOutput" class="fade-in-section"></div>
 
                 <!-- Time-based Trend Charts -->
-                <div id="summaryTrendCharts" style="display: none; margin-top: 25px;">
-                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;">📈 Time-based Order Trends</h3>
+                <div id="summaryTrendCharts" class="fade-in-section" style="display: none; margin-top: 25px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="line-chart"></span> Time-based Order Trends</h3>
                     <div class="chart-row">
                         <div class="chart-wrapper">
                             <canvas id="dailyOrderCountChart"></canvas>
@@ -1051,8 +1103,8 @@
                 </div>
 
                 <!-- Peak Performance Analysis -->
-                <div id="summaryPeakPerformance" class="insights-section" style="display: none;">
-                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;">⚡ Peak Performance Insights</h3>
+                <div id="summaryPeakPerformance" class="insights-section fade-in-section" style="display: none;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="zap"></span> Peak Performance Insights</h3>
                     <p id="peakOrderVolume"></p>
                     <p id="peakCompletionRate"></p>
                 </div>
@@ -1123,7 +1175,7 @@
                     return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== '');
                 });
 
-                // If no valid data rows remain after cleaning, throw an error
+                // If no valid data rows remain after cleaning, throw an Hrror
                 if (cleanedData.length === 0) {
                     throw new Error('No valid data rows remaining after cleaning. Please check your data for content.');
                 }
@@ -1166,7 +1218,8 @@
                 const missingColumns = expectedSummaryColumns.filter(col => !finalHeaders.includes(col));
 
                 if (missingColumns.length > 0) {
-                    throw new Error(`Error processing data: missing required columns: ${missingColumns.join(', ')}. Please ensure they are present and correctly spelled in your file header.`);
+                    // Specific Hrror message as requested
+                    throw new Error(`missing required columns: ${missingColumns.join(', ')}. Please ensure they are present and correctly spelled.`);
                 }
                 
                 console.log('Actual headers found (after normalization, now matching expected names):', Object.keys(normalizedData[0] || {}));
@@ -1264,13 +1317,13 @@
                         
                         // After processing, show top performers by default and hide trends
                         hideAllSummaryOutputs();
-                        document.getElementById('summaryTopPerformers').style.display = 'block';
+                        const topPerformersSection = document.getElementById('summaryTopPerformers');
+                        topPerformersSection.style.display = 'block';
+                        topPerformersSection.classList.add('show'); // Add fade-in class
                         renderSummaryTopPerformers();
 
                         document.getElementById('summaryControls').style.display = 'block';
-                        // Trends are now shown via the dedicated button
-                        // document.getElementById('summaryTrendCharts').style.display = 'block'; 
-                        // document.getElementById('summaryPeakPerformance').style.display = 'block'; 
+                        document.getElementById('summaryControls').classList.add('show'); // Add fade-in class
                     }, 500);
 
                 } catch (error) {
@@ -1577,7 +1630,7 @@
                         } else {
                             const s = String(orderDateStr).trim();
                             const formats = [
-                                (str) => { // YYYY-MM-DD (ISO-like)
+                                (str) => { //YYYY-MM-DD (ISO-like)
                                     const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
                                     return match ? new Date(str) : null;
                                 },
@@ -1597,7 +1650,7 @@
                                     }
                                     return null;
                                 },
-                                (str) => { // YYYY/MM/DD
+                                (str) => { //YYYY/MM/DD
                                     const match = str.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
                                     return match ? new Date(str.replace(/\//g, '-')) : null;
                                 },
@@ -1686,15 +1739,14 @@
                 } else {
                     peakCompletionRateP.innerHTML = `No data to determine peak completion rate.`;
                 }
-
-                // This section's visibility is now managed by showTimeBasedTrends()
-                // summaryPeakPerformanceDiv.style.display = 'block'; 
             }
 
 
             function generateSummaryReport(name) {
                 hideAllSummaryOutputs(); // Hide other outputs when an individual report is generated
-                document.getElementById('summaryOutput').style.display = 'block'; // Show the output div
+                const summaryOutputSection = document.getElementById('summaryOutput');
+                summaryOutputSection.style.display = 'block'; // Show the output div
+                summaryOutputSection.classList.add('show'); // Add fade-in class
 
               try {
                 const line1 = allSummaryData.filter(r => parseInt(r['Line']) === 1 && r['Assigned_To'] && r['Assigned_To'].trim() === name );
@@ -1782,7 +1834,7 @@
                 };
                 const output = `
                   <div style="margin: 20px 0;">
-                    <h3 style="color: var(--text-color); transition: color 0.3s ease;">📋 Individual Report: ${name}</h3>
+                    <h3 style="color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="clipboard-list"></span> Individual Report: ${name}</h3>
                     <div class="stats">
                       <div class="stat-card">
                         <div class="stat-number"><span>${uniqueUserOrders.length}</span></div>
@@ -1806,7 +1858,7 @@
                       </div>
                     </div>
                     <div class="chart-container">
-                      <h4 style="color: var(--text-color); transition: color 0.3s ease;">📈 Visual Summary</h4>
+                      <h4 style="color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="bar-chart-2"></span> Visual Summary</h4>
                       <div class="chart-row">
                         <div class="chart-wrapper">
                           <canvas id="summaryStatusChart"></canvas>
@@ -1818,7 +1870,7 @@
                     </div>
                     <div class="download-buttons">
                       <button onclick="downloadSummaryIndividualReport('${name}', 'excel')" class="export-btn">
-                        ⬇️ Download Excel Report
+                        <span class="icon" data-lucide="download"></span> Download Excel Report
                       </button>
                     </div>
                     <table>
@@ -1835,6 +1887,7 @@
                     </table>
                   </div>`;
                 document.getElementById('summaryOutput').innerHTML = output;
+                lucide.createIcons(); // Re-render Lucide icons after innerHTML change
                 renderSummaryCharts(name, statusData, typeCounts);
               } catch (error) {
                 showSummaryMessage(`❌ Error generating report: ${error.message}`, 'error');
@@ -1897,8 +1950,8 @@
                   const order = row['Order#'];
                   if (!order) return;
 
-                  const status = (row['Status'] || '').toString().toLowerCase();
-                  const assigned = (row['Assigned_To'] || '').toString().trim();
+                  const status = (row['Status'] || '').toLowerCase();
+                  const assigned = (row['Assigned_To'] || '').trim();
 
                   if (!orderStatusMap[order]) {
                     orderStatusMap[order] = { status: 'in_progress', assignedTo: assigned };
@@ -2294,7 +2347,7 @@
                 });
                 const tp = document.getElementById('summaryTopPerformers');
                 tp.style.display = 'block';
-                setTimeout(() => tp.classList.add('show'), 50);
+                tp.classList.add('show'); // Add fade-in class
             }
 
 
@@ -2325,10 +2378,13 @@
             function clearSummaryReportSearch() {
               document.getElementById('summaryNameInput').value = '';
               document.getElementById('summaryOutput').innerHTML = '';
+              document.getElementById('summaryOutput').classList.remove('show'); // Remove fade-in
               clearSummaryMessages();
               hideAllSummaryOutputs(); // Hide all outputs
               if (allSummaryData.length > 0) {
-                 document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers again
+                 const topPerformersSection = document.getElementById('summaryTopPerformers');
+                 topPerformersSection.style.display = 'block'; // Show top performers again
+                 topPerformersSection.classList.add('show'); // Add fade-in
               }
             }
 
@@ -2339,6 +2395,7 @@
                 document.getElementById('summaryMessages').innerHTML = '';
                 document.getElementById('summaryProcessing').style.display = 'none';
                 document.getElementById('summaryControls').style.display = 'none';
+                document.getElementById('summaryControls').classList.remove('show'); // Remove fade-in
                 
                 hideAllSummaryOutputs(); // Ensure all output sections are hidden
 
@@ -2363,9 +2420,13 @@
             // Function to hide all summary output sections
             function hideAllSummaryOutputs() {
                 document.getElementById('summaryOutput').style.display = 'none';
+                document.getElementById('summaryOutput').classList.remove('show'); // Remove fade-in
                 document.getElementById('summaryTopPerformers').style.display = 'none';
+                document.getElementById('summaryTopPerformers').classList.remove('show'); // Remove fade-in
                 document.getElementById('summaryTrendCharts').style.display = 'none';
+                document.getElementById('summaryTrendCharts').classList.remove('show'); // Remove fade-in
                 document.getElementById('summaryPeakPerformance').style.display = 'none';
+                document.getElementById('summaryPeakPerformance').classList.remove('show'); // Remove fade-in
             }
 
             // Function to show time-based trends and hide others
@@ -2377,8 +2438,14 @@
 
                 hideAllSummaryOutputs(); // Hide all other sections first
                 
-                document.getElementById('summaryTrendCharts').style.display = 'block';
-                document.getElementById('summaryPeakPerformance').style.display = 'block';
+                const trendChartsSection = document.getElementById('summaryTrendCharts');
+                const peakPerformanceSection = document.getElementById('summaryPeakPerformance');
+
+                trendChartsSection.style.display = 'block';
+                peakPerformanceSection.style.display = 'block';
+
+                trendChartsSection.classList.add('show');
+                peakPerformanceSection.classList.add('show');
 
                 renderSummaryTrendCharts();
                 renderPeakPerformanceAnalysis();
@@ -2460,11 +2527,15 @@
 
     <!-- Order Validation Tool Section -->
     <div id="validationTool" class="tool-container validator-tool" style="display: none;">
-        <button onclick="showOptions()" class="back-to-options-btn">← Back to Options</button>
+        <button onclick="showOptions()" class="back-to-options-btn">
+            <span class="icon" data-lucide="arrow-left"></span> Back to Options
+        </button>
         <!-- Dark Mode Toggle (now global and positioned within the tool) -->
-        <button id="validatorDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
+        <button id="validatorDarkModeToggle" class="global-dark-mode-toggle">
+            <span class="icon"></span> <span>Dark Mode</span>
+        </button>
         <div class="container container-validator" style="box-shadow: none;"> <!-- remove duplicate shadow -->
-            <h1>✅ ValidatorPro</h1>
+            <h1><span class="icon" data-lucide="check-circle"></span> ValidatorPro</h1>
             <div class="input-section" id="validationInputSection">
                 <h3>Upload or Paste Data</h3>
                 <div class="upload-area" id="uploadAreaValidator">
@@ -2473,7 +2544,7 @@
                     </p>
                     <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" class="file-input-hidden">
                     <button type="button" class="drop-zone-button" onclick="document.getElementById('fileUpload').click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-cloud"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                        <span class="icon" data-lucide="upload-cloud"></span>
                         Choose File
                     </button>
                     <div id="fileNameDisplay" class="file-name-display"></div> <!-- Added for file name display -->
@@ -2482,10 +2553,18 @@
                     
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-                    <button onclick="triggerAnalysis()">🔍 Analyze Data</button>
-                    <button onclick="downloadErrorsAsCSV()">⬇️ Download Errors</button>
-                    <button onclick="resetTool()">🔄 Reset</button>
-                    <button onclick="toggleDebugInfo()">🐞 Toggle Debug Info</button>
+                    <button onclick="triggerAnalysis()">
+                        <span class="icon" data-lucide="scan-eye"></span> Analyze Data
+                    </button>
+                    <button onclick="downloadErrorsAsCSV()">
+                        <span class="icon" data-lucide="download"></span> Download Errors
+                    </button>
+                    <button onclick="resetTool()">
+                        <span class="icon" data-lucide="rotate-ccw"></span> Reset
+                    </button>
+                    <button onclick="toggleDebugInfo()">
+                        <span class="icon" data-lucide="bug"></span> Toggle Debug Info
+                    </button>
                 </div>
             </div>
 
@@ -2503,8 +2582,8 @@
                 <div id="debugContent" style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 0.85em; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--input-border); overflow-x: auto;"></div>
             </div>
 
-            <div id="errorSection" style="display: none;">
-                <h3 style="color: var(--text-color);">Error Report:</h3>
+            <div id="errorSection" class="fade-in-section" style="display: none;">
+                <h3 style="color: var(--text-color);"><span class="icon" data-lucide="alert-triangle"></span> Error Report:</h3>
                 <table id="errorTable">
                     <thead>
                         <tr><th>Row (Original)</th><th>Order#</th><th>Assigned_To</th><th>Error Message</th></tr>
@@ -2745,8 +2824,11 @@
                 workerStartTime = performance.now();
                 document.getElementById('spinner').style.display = 'flex';
                 document.getElementById('analyzeTime').innerText = '';
-                // Ensure error section is visible when analysis starts
-                document.getElementById('errorSection').style.display = 'block';
+                
+                const errorSection = document.getElementById('errorSection');
+                errorSection.style.display = 'block';
+                errorSection.classList.remove('show'); // Remove 'show' class to reset animation
+                
                 displayErrors([]); // Clear previous errors and show "No errors found" temporarily
 
                 const fileInput = document.getElementById('fileUpload');
@@ -2843,6 +2925,7 @@
 
                 if (worker) {
                     worker.postMessage(parsedData);
+                    document.getElementById('errorSection').classList.add('show'); // Add fade-in class after postMessage
                 } else {
                     showCustomMessageBox('<strong>Initialization Error:</strong> The validation tool could not start. Please try refreshing the page.', 'error');
                     document.getElementById('spinner').style.display = 'none';
@@ -2890,6 +2973,7 @@
               document.getElementById("analyzeTime").innerText = "";
               document.getElementById('spinner').style.display = 'none';
               document.getElementById('errorSection').style.display = 'none'; // Hide on reset
+              document.getElementById('errorSection').classList.remove('show'); // Remove fade-in
               document.getElementById('fileNameDisplay').textContent = ''; // Clear file display
               updateDebugInfo();
               initWorker(); // Re-initialize worker on reset
@@ -3119,10 +3203,19 @@
                     // For summary tool, it will now default to showing top performers if data is present.
                     if (toolName === 'summary' && allSummaryData.length > 0) {
                         hideAllSummaryOutputs(); // Clear previous displays
-                        document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers
+                        const topPerformersSection = document.getElementById('summaryTopPerformers');
+                        topPerformersSection.style.display = 'block'; // Show top performers
+                        topPerformersSection.classList.add('show'); // Add fade-in class
                         renderSummaryTopPerformers();
                         document.getElementById('summaryControls').style.display = 'block'; // Ensure controls are visible
+                        document.getElementById('summaryControls').classList.add('show'); // Add fade-in class
                     }
+
+                    // For validator tool, apply fade-in if error section is visible after data processing
+                    if (toolName === 'validation' && document.getElementById('errorSection').style.display === 'block') {
+                        document.getElementById('errorSection').classList.add('show');
+                    }
+                    lucide.createIcons(); // Call Lucide to render icons on new sections
                 }
             }, 100); // Update progress every 100ms
         }
@@ -3159,8 +3252,8 @@
                     document.documentElement.setAttribute('data-theme', newTheme);
                     localStorage.setItem('theme', newTheme);
 
-                    // Update text for all toggles
-                    updateDarkModeToggleText(newTheme);
+                    // Update text and icon for all toggles
+                    updateDarkModeToggleContent(newTheme);
 
                     // Re-render charts to apply new theme colors if in summary tool
                     if (document.getElementById('summaryTool').style.display === 'block' && allSummaryData.length > 0) {
@@ -3180,20 +3273,35 @@
                              renderSummaryTopPerformers();
                         }
                     }
+                    lucide.createIcons(); // Important: Re-render Lucide icons after theme change
                 });
             });
         }
 
-        function updateDarkModeToggleText(theme) {
+        function updateDarkModeToggleContent(theme) {
             allDarkModeToggles.forEach(toggle => {
-                toggle.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+                const iconSpan = toggle.querySelector('.icon');
+                const textSpan = toggle.querySelector('span:not(.icon)'); // Get the text span
+                if (iconSpan && typeof lucide !== 'undefined' && lucide.icons) { // Check if lucide and lucide.icons are defined
+                    const iconName = theme === 'dark' ? 'sun' : 'moon';
+                    if (lucide.icons[iconName]) { // Check if the specific icon exists
+                        iconSpan.innerHTML = lucide.icons[iconName].toSvg();
+                    } else {
+                        console.warn(`Lucide icon '${iconName}' not found. Falling back to emoji.`);
+                        iconSpan.innerHTML = theme === 'dark' ? '☀️' : '🌙'; // Fallback
+                    }
+                } else if (iconSpan) {
+                     // Fallback if lucide library is not loaded or ready
+                     iconSpan.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+                }
+                if (textSpan) {
+                    textSpan.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+                }
             });
         }
 
-        // Original showTool function, now renamed to be called after loader
+        // Original showTool function, now primarily called internally by launchToolWithLoader
         function showTool(toolName) {
-            // This function is now primarily called internally by launchToolWithLoader
-            // It sets the visibility of the tools directly without the loader sequence.
             const summaryTool = document.getElementById('summaryTool');
             const validationTool = document.getElementById('validationTool');
             const guideBook = document.getElementById('guideBook'); // Get guide book element
@@ -3201,6 +3309,10 @@
             summaryTool.style.display = 'none';
             validationTool.style.display = 'none';
             guideBook.style.display = 'none'; // Hide guide book initially
+
+            // Remove 'show' class from all potential fade-in sections
+            const sectionsToClearFade = document.querySelectorAll('.fade-in-section');
+            sectionsToClearFade.forEach(section => section.classList.remove('show'));
 
             if (toolName === 'summary') {
                 summaryTool.style.display = 'block';
@@ -3225,6 +3337,7 @@
                     toggle.style.display = 'none';
                 }
             });
+            lucide.createIcons(); // Call Lucide to render icons on newly visible tool
         }
 
         function showOptions() {
@@ -3242,6 +3355,7 @@
                     toggle.style.display = 'none';
                 }
             });
+            lucide.createIcons(); // Call Lucide to render icons on startup page
         }
 
         // New function to show Guide Book
@@ -3259,6 +3373,7 @@
                     toggle.style.display = 'none';
                 }
             });
+            lucide.createIcons(); // Call Lucide to render icons on guide book
         }
 
 
@@ -3269,7 +3384,12 @@
             // Set initial theme from localStorage or system preference
             const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', savedTheme);
-            updateDarkModeToggleText(savedTheme);
+            
+            // Render Lucide icons for initial static content first
+            lucide.createIcons(); 
+
+            // Then update dark mode toggle content, which relies on lucide.icons
+            updateDarkModeToggleContent(savedTheme); 
 
             // Show initial options screen
             showOptions();
