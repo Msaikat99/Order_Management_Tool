@@ -329,6 +329,7 @@
             box-shadow: 0 2px 8px var(--shadow-medium);
             transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
             font-weight: 500;
+            margin-right: 15px; /* Move slightly left */
         }
         .global-dark-mode-toggle:hover {
             background-color: var(--button-secondary-hover);
@@ -747,6 +748,54 @@
             color: var(--accent-color);
         }
 
+        /* Startup page loader */
+        #startupLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(5px); /* Safari support */
+            transition: opacity 0.3s ease;
+        }
+        #startupLoader .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        #startupLoader .loader-text {
+            margin-bottom: 15px;
+        }
+        #startupLoader .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #startupLoader .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #8bc34a, #aed581); /* Green gradient */
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+
         /* Responsiveness */
         @media (max-width: 768px) {
             body { padding: 15px; }
@@ -784,6 +833,7 @@
                 right: 15px; /* Adjust for smaller screens */
                 padding: 8px 10px;
                 font-size: 0.8em;
+                margin-right: 0; /* No extra margin on small screens */
             }
             .back-to-options-btn {
                 top: 15px; /* Adjust for smaller screens */
@@ -799,38 +849,51 @@
         <button id="globalDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
         <div class="app-header">
             <h1>📦 Order Management Suite</h1>
-            <p>Your all-in-one solution for efficient order data analysis and validation. Streamline your workflow and ensure data integrity with these powerful tools.</p>
+            <p>The Order Management Tool is a web-based solution designed for the Premier Packaging project under ActioHX. It streamlines daily order tracking, performance analytics, and data validation — all in a single interface.</p>
+            <p>Built with modern web technologies, this lightweight yet powerful tool enables the Operations team to visualize, validate, and export order data with zero installation and 100% browser-based execution.</p>
         </div>
 
         <div class="tool-selection">
             <div class="tool-card">
-                <h2>📊 Order Summary</h2>
+                <h2>📊 SummaryX</h2>
                 <ul>
-                    <li>Generate detailed reports by assignee.</li>
+                    <li>Generate detailed performance reports by assignee.</li>
+                    <li>Identify single vs. multi-line orders.</li>
                     <li>Visualize order status and type distribution.</li>
-                    <li>Identify top-performing team members.</li>
-                    <li>Export comprehensive data summaries.</li>
-                    <li>**NEW: Time-based Order Trends & Peak Performance Analysis**</li>
+                    <li>Detect top performers across various metrics.</li>
+                    <li>Export comprehensive Excel reports.</li>
+                    <li>Time-based Order Trends & Peak Performance Analysis.</li>
                 </ul>
-                <button onclick="showTool('summary')">Launch Summary Tool</button>
+                <button onclick="launchToolWithLoader('summary')">Launch SummaryX</button>
             </div>
             <div class="tool-card">
-                <h2>✅ Order Validation</h2>
+                <h2>✅ ValidatorPro</h2>
                 <ul>
-                    <li>Validate order data against predefined rules.</li>
-                    <li>Detect inconsistencies in batch times and statuses.</li>
-                    <li>Identify missing or incorrect "Reason for Pending."</li>
-                    <li>Download a clear report of all errors.</li>
+                    <li>Detect errors in batch time vs. order status logic.</li>
+                    <li>Identify missing or incorrect “Reason for Pending.”</li>
+                    <li>Highlights discrepancies for easy review.</li>
+                    <li>Exports a clean error report in tabular format.</li>
                 </ul>
-                <button onclick="showTool('validation')">Launch Validation Tool</button>
+                <button onclick="launchToolWithLoader('validation')">Launch ValidatorPro</button>
             </div>
         </div>
         <footer class="startup-footer">
-            <p>&copy; 2025 Order Flow Solutions. All rights reserved.</p>
-			<p>✦ Code & Craft by <strong>Saikat Majumder</strong></p>
+            <p>&copy; 2025 ActioHX. All rights reserved.</p>
+			<p>Crafted with precision by <strong>Saikat Majumder</strong></p>
+            <p>Tool Version: v1.2</p>
         </footer>
 		
     </div>
+
+    <!-- Startup Loader Overlay -->
+    <div id="startupLoader" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loader-text" id="loaderText">Loading tool...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="loaderProgressFill"></div>
+        </div>
+    </div>
+
 
     <!-- Order Summary Tool Section -->
     <div id="summaryTool" class="tool-container summary-tool" style="display: none;">
@@ -842,7 +905,7 @@
                 <div class="header-section">
                     <div>
                         <h1 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                            📊 Order Summary Tool
+                            📊 SummaryX
                         </h1>
                         <p style="margin: 5px 0 0 0; color: var(--light-text-color); font-size: 1em; transition: color 0.3s ease;">
                             Enhanced with Smart Analytics & Offline Features
@@ -898,7 +961,7 @@
                         <input type="text" id="summaryNameInput" list="summaryNameSuggestions" placeholder="Type name to search for report..." style="flex: 1; min-width: 180px;">
                         <datalist id="summaryNameSuggestions"></datalist>
                         <button onclick="searchSummaryReportByName()" style="flex-grow: 0;">🔍 Search Report</button>
-                        <button onclick="clearSummaryReportSearch()">🔄 Reset Data</button>
+                        <button onclick="clearSummaryReportSearch()">🔄 Reset Search</button>
                     </div>
                 </div>
                 <!-- 🏆 Top Performer Leaderboard -->
@@ -2337,7 +2400,7 @@
         <!-- Dark Mode Toggle (now global and positioned within the tool) -->
         <button id="validatorDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
         <div class="container container-validator" style="box-shadow: none;"> <!-- remove duplicate shadow -->
-            <h1>✅ Order Data Validator</h1>
+            <h1>✅ ValidatorPro</h1>
             <div class="input-section" id="validationInputSection">
                 <h3>Upload or Paste Data</h3>
                 <div class="upload-area" id="uploadAreaValidator">
@@ -2921,6 +2984,83 @@
         // Store references to all theme toggle buttons
         const allDarkModeToggles = [];
 
+        // Global loader functions
+        function showStartupLoader(show, message = 'Loading...', progress = 0) {
+            const loaderDiv = document.getElementById('startupLoader');
+            const loaderText = document.getElementById('loaderText');
+            const loaderProgressFill = document.getElementById('loaderProgressFill');
+
+            if (show) {
+                loaderDiv.style.display = 'flex';
+                loaderDiv.style.opacity = '1';
+                loaderText.textContent = message;
+                loaderProgressFill.style.width = `${progress}%`;
+            } else {
+                loaderDiv.style.opacity = '0';
+                setTimeout(() => {
+                    loaderDiv.style.display = 'none';
+                    loaderProgressFill.style.width = '0%'; // Reset progress for next time
+                }, 300); // Allow fade out transition
+            }
+        }
+
+        // Modified showTool to incorporate loader
+        function launchToolWithLoader(toolName) {
+            showStartupLoader(true, 'Launching...', 10);
+            document.getElementById('startupOptions').style.display = 'none';
+
+            // Simulate loading progress
+            let progress = 10;
+            const interval = setInterval(() => {
+                progress += 20;
+                if (progress <= 100) {
+                    showStartupLoader(true, `Loading ${toolName} tool...`, progress);
+                }
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showStartupLoader(false); // Hide loader quickly after full progress
+
+                    // Actual tool display logic
+                    const summaryTool = document.getElementById('summaryTool');
+                    const validationTool = document.getElementById('validationTool');
+                    
+                    summaryTool.style.display = 'none';
+                    validationTool.style.display = 'none';
+
+                    if (toolName === 'summary') {
+                        summaryTool.style.display = 'block';
+                        resetSummaryTool(); // Reset tool state when opening
+                    } else if (toolName === 'validation') {
+                        validationTool.style.display = 'block';
+                        if (typeof initWorker === 'function' && !worker) {
+                            initWorker();
+                        }
+                        resetTool(); // Reset tool state when opening
+                    }
+
+                    // Ensure the correct toggle button is visible based on the active tool
+                    allDarkModeToggles.forEach(toggle => {
+                        const parentTool = toggle.closest('.tool-container') || toggle.closest('.nav-buttons-container');
+                        if (parentTool && ((toolName === 'summary' && parentTool.id === 'summaryTool') ||
+                                        (toolName === 'validation' && parentTool.id === 'validationTool') ||
+                                        (toolName === 'options' && parentTool.id === 'startupOptions'))) {
+                            toggle.style.display = 'block';
+                        } else {
+                            toggle.style.display = 'none';
+                        }
+                    });
+
+                    // For summary tool, it will now default to showing top performers if data is present.
+                    if (toolName === 'summary' && allSummaryData.length > 0) {
+                        hideAllSummaryOutputs(); // Clear previous displays
+                        document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers
+                        renderSummaryTopPerformers();
+                        document.getElementById('summaryControls').style.display = 'block'; // Ensure controls are visible
+                    }
+                }
+            }, 100); // Update progress every 100ms
+        }
+
         function initializeDarkModeToggles() {
             // Add the startup screen toggle
             const startupToggle = document.getElementById('globalDarkModeToggle');
@@ -2960,7 +3100,6 @@
                                 generateSummaryReport(nameInput.value.trim());
                             } else {
                                 // Re-render general charts if they were showing (shouldn't be, but as a fallback)
-                                // This case typically won't be hit if outputs are managed well.
                                 // If needed, you'd re-calculate overall status/type counts and call renderSummaryCharts
                             }
                         } else if (document.getElementById('summaryTrendCharts').style.display === 'block') {
@@ -2980,20 +3119,23 @@
             });
         }
 
+        // Original showTool function, now renamed to be called after loader
         function showTool(toolName) {
-            document.getElementById('startupOptions').style.display = 'none';
-            document.getElementById('summaryTool').style.display = 'none';
-            document.getElementById('validationTool').style.display = 'none';
+            // This function is now primarily called internally by launchToolWithLoader
+            // It sets the visibility of the tools directly without the loader sequence.
+            const summaryTool = document.getElementById('summaryTool');
+            const validationTool = document.getElementById('validationTool');
+            
+            summaryTool.style.display = 'none';
+            validationTool.style.display = 'none';
 
             if (toolName === 'summary') {
-                document.getElementById('summaryTool').style.display = 'block';
-                resetSummaryTool(); // Reset tool state when opening
+                summaryTool.style.display = 'block';
             } else if (toolName === 'validation') {
-                document.getElementById('validationTool').style.display = 'block';
+                validationTool.style.display = 'block';
                 if (typeof initWorker === 'function' && !worker) {
                     initWorker();
                 }
-                resetTool(); // Reset tool state when opening
             }
 
             // Ensure the correct toggle button is visible based on the active tool
@@ -3007,15 +3149,6 @@
                     toggle.style.display = 'none';
                 }
             });
-
-            // This block is for re-rendering charts when a tool becomes visible (e.g., after theme change)
-            // For summary tool, it will now default to showing top performers if data is present.
-            if (toolName === 'summary' && allSummaryData.length > 0) {
-                 hideAllSummaryOutputs(); // Clear previous displays
-                 document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers
-                 renderSummaryTopPerformers();
-                 document.getElementById('summaryControls').style.display = 'block'; // Ensure controls are visible
-            }
         }
 
         function showOptions() {
