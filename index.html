@@ -338,7 +338,7 @@
 
 
         /* Tool Specific Section Styling */
-        .input-section, .chart-container, .debug-info, #errorSection, #summaryTopPerformers {
+        .input-section, .chart-container, .debug-info, #errorSection, #summaryTopPerformers, .insights-section {
             background: var(--container-bg); /* Use container bg for internal sections */
             padding: 25px;
             border-radius: 10px;
@@ -726,6 +726,26 @@
             min-height: 1.2em; /* Reserve space to prevent layout shift */
         }
 
+        /* Insights Section */
+        .insights-section {
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow-light);
+            margin-top: 25px;
+            border: 1px solid var(--border-color);
+            background: var(--container-bg);
+        }
+        .insights-section h3 {
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+        .insights-section p {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        .insights-section strong {
+            color: var(--accent-color);
+        }
 
         /* Responsiveness */
         @media (max-width: 768px) {
@@ -790,6 +810,7 @@
                     <li>Visualize order status and type distribution.</li>
                     <li>Identify top-performing team members.</li>
                     <li>Export comprehensive data summaries.</li>
+                    <li>**NEW: Time-based Order Trends & Peak Performance Analysis**</li>
                 </ul>
                 <button onclick="showTool('summary')">Launch Summary Tool</button>
             </div>
@@ -828,7 +849,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="input-section">
+                <div class="input-section" id="summaryInputSection">
                     <h3>Data Input</h3>
                     <div class="upload-area" id="summaryUploadArea">
                         <p style="font-size: 1.1em; color: var(--text-color); margin-bottom: 20px;">
@@ -841,7 +862,7 @@
                         </button>
                         <div id="summaryFileNameDisplay" class="file-name-display"></div> <!-- Added for file name display -->
                         <div class="separator">— OR —</div>
-                        <textarea id="summaryManualInput" rows="8" placeholder="Paste your CSV data here (with headers)&#10;&#10;Expected columns: Order#, Line, Assigned_To, Status, Type&#10;&#10;Example:&#10;Order#,Line,Assigned_To,Status,Type&#10;12345,1,John Doe,Awaiting Response,AIR&#10;12345,2,John Doe,In Progress,AIR"></textarea>
+                        <textarea id="summaryManualInput" rows="8" placeholder="Paste your CSV data here (with headers)&#10;&#10;Expected columns: Order#, Line, Assigned_To, Status, Type, Order Date&#10;&#10;Example:&#10;Order#,Line,Assigned_To,Status,Type,Order Date&#10;12345,1,John Doe,Awaiting Response,AIR,2024-01-15&#10;12345,2,John Doe,In Progress,AIR,2024-01-15"></textarea>
                         
                     </div>
                     <button onclick="triggerSummaryAnalysis()">📝 Process Data</button>
@@ -868,12 +889,16 @@
                             <option value="status">📊 Export Status-wise Data</option>
                         </select>
                         <button onclick="handleSummaryExport()" class="export-btn" style="flex-grow: 0;">⬇️ Export</button>
+                        <!-- New button for showing trends -->
+                        <button onclick="showTimeBasedTrends()" style="flex-grow: 0; background-color: var(--button-secondary-bg);">
+                            📊 Show Trend Analysis
+                        </button>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
                         <input type="text" id="summaryNameInput" list="summaryNameSuggestions" placeholder="Type name to search for report..." style="flex: 1; min-width: 180px;">
                         <datalist id="summaryNameSuggestions"></datalist>
                         <button onclick="searchSummaryReportByName()" style="flex-grow: 0;">🔍 Search Report</button>
-                        <button onclick="clearSummaryReportSearch()">🔄 Reset Search</button>
+                        <button onclick="clearSummaryReportSearch()">🔄 Reset Data</button>
                     </div>
                 </div>
                 <!-- 🏆 Top Performer Leaderboard -->
@@ -884,6 +909,27 @@
                 </div>
 
                 <div id="summaryOutput"></div>
+
+                <!-- Time-based Trend Charts -->
+                <div id="summaryTrendCharts" style="display: none; margin-top: 25px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;">📈 Time-based Order Trends</h3>
+                    <div class="chart-row">
+                        <div class="chart-wrapper">
+                            <canvas id="dailyOrderCountChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="dailyCompletionRateChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Peak Performance Analysis -->
+                <div id="summaryPeakPerformance" class="insights-section" style="display: none;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;">⚡ Peak Performance Insights</h3>
+                    <p id="peakOrderVolume"></p>
+                    <p id="peakCompletionRate"></p>
+                </div>
+
                 <div class="footer-credit">
                     ✦ Created by Saikat Majumder © 2025
                 </div>
@@ -892,9 +938,9 @@
 
         <script>
             let allSummaryData = [];
-            let groupedSummary = {};
             let processingSummaryStartTime = 0;
-            let expectedSummaryColumns = ['Order#', 'Line', 'Assigned_To', 'Status', 'Type'];
+            // Updated expectedSummaryColumns to include 'Order Date'
+            const expectedSummaryColumns = ['Order#', 'Line', 'Assigned_To', 'Status', 'Type', 'Order Date']; 
 
             function showSummaryMessage(message, type = 'info') {
               const messagesDiv = document.getElementById('summaryMessages');
@@ -926,42 +972,90 @@
               document.getElementById('summaryProcessingStats').textContent = stats;
             }
 
-            function validateSummaryData(data) {
-              if (!data || data.length === 0) {
-                throw new Error('No data found in the file/input');
-              }
+            function cleanAndValidateSummaryData(data) {
+                if (!data || data.length === 0) {
+                    throw new Error('No data found in the file/input.');
+                }
 
-              const headers = Object.keys(data[0]);
-              const missingColumns = expectedSummaryColumns.filter(col =>
-                !headers.some(h => h.toLowerCase().includes(col.toLowerCase()))
-              );
+                // Create a deep copy to ensure original data from XLSX.utils.sheet_to_json is not modified
+                let cleanedData = JSON.parse(JSON.stringify(data));
 
-              if (missingColumns.length > 0) {
-                throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
-              }
-
-              const normalizedData = data.map(row => {
-                const newRow = {};
-                Object.keys(row).forEach(key => {
-                  const normalizedKey = expectedSummaryColumns.find(col =>
-                    key.toLowerCase().includes(col.toLowerCase())
-                  ) || key;
-                  newRow[normalizedKey] = row[key];
+                // Aggressive trimming and cleaning for all values
+                cleanedData = cleanedData.map(row => {
+                    const newRow = {};
+                    for (const key in row) {
+                        // Ensure key is a string and handle null/undefined values
+                        const cleanedKey = typeof key === 'string' ? key.trim() : key;
+                        newRow[cleanedKey] = typeof row[key] === 'string' ? row[key].trim() : row[key];
+                    }
+                    return newRow;
                 });
-                return newRow;
-              });
 
-              return normalizedData;
+                // Remove empty rows (rows where all values are empty strings or only whitespace)
+                cleanedData = cleanedData.filter(row => {
+                    return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== '');
+                });
+
+                // If no valid data rows remain after cleaning, throw an error
+                if (cleanedData.length === 0) {
+                    throw new Error('No valid data rows remaining after cleaning. Please check your data for content.');
+                }
+
+                // Get current headers after initial cleaning
+                let currentHeaders = Object.keys(cleanedData[0]);
+
+                console.log('--- Debugging Headers ---');
+                console.log('Expected columns:', expectedSummaryColumns);
+                console.log('Actual headers found (before normalization):', currentHeaders);
+
+                // Normalize headers in the actual data for consistent access
+                const normalizedData = cleanedData.map(row => {
+                  const newRow = {};
+                  Object.keys(row).forEach(key => {
+                    let foundExpectedKey = null;
+                    // Attempt to find a match for the current 'key' from 'expectedSummaryColumns'
+                    // Prioritize exact match, then case-insensitive, then aggressive normalization
+                    for (const expectedCol of expectedSummaryColumns) {
+                        // Aggressive normalization: remove all non-alphanumeric characters (including spaces, underscores)
+                        const keyNormalizedForComparison = String(key).replace(/\W/g, '').toLowerCase(); // \W matches non-word characters
+                        const expectedColNormalizedForComparison = String(expectedCol).replace(/\W/g, '').toLowerCase();
+
+                        if (key === expectedCol || // Exact match (case-sensitive)
+                            key.toLowerCase() === expectedCol.toLowerCase() || // Case-insensitive match
+                            keyNormalizedForComparison === expectedColNormalizedForComparison) // Aggressive alphanumeric comparison
+                        {
+                            foundExpectedKey = expectedCol; // Use the *exact* expected column name
+                            break;
+                        }
+                    }
+                    // Assign value to the 'foundExpectedKey' or fallback to original key if no expected match
+                    newRow[foundExpectedKey || key] = row[key];
+                  });
+                  return newRow;
+                });
+
+                // After normalization, check for missing columns using the *standardized* expected names
+                const finalHeaders = Object.keys(normalizedData[0] || {});
+                const missingColumns = expectedSummaryColumns.filter(col => !finalHeaders.includes(col));
+
+                if (missingColumns.length > 0) {
+                    throw new Error(`Missing required columns: ${missingColumns.join(', ')}. Please ensure they are present and correctly spelled in your file header.`);
+                }
+                
+                console.log('Actual headers found (after normalization, now matching expected names):', Object.keys(normalizedData[0] || {}));
+                console.log('--- End Debugging Headers ---');
+
+                return normalizedData;
             }
 
             async function triggerSummaryAnalysis() {
                 const fileInput = document.getElementById('summaryFileInput');
                 const manualInput = document.getElementById('summaryManualInput');
-                let data;
+                let rawData;
                 let sourceFileName = '';
 
                 clearSummaryMessages();
-                showSummaryProcessing(true);
+                showSummaryProcessing(true, 'Detecting data source...');
 
                 try {
                     if (fileInput.files.length > 0) {
@@ -976,7 +1070,7 @@
                             updateSummaryProgress(30, 'Parsing CSV data...');
                             const result = Papa.parse(text, {
                                 header: true,
-                                skipEmptyLines: true,
+                                skipEmptyLines: false,
                                 dynamicTyping: true,
                                 delimitersToGuess: [',', '\t', '|', ';'],
                                 transformHeader: header => header.trim()
@@ -984,16 +1078,17 @@
                             if (result.errors.length > 0) {
                                 console.warn('CSV parsing warnings:', result.errors);
                             }
-                            data = result.data;
+                            rawData = result.data;
                         } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
                             updateSummaryProgress(20, 'Reading Excel file...');
                             const arrayBuffer = await file.arrayBuffer();
                             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                             const sheetName = workbook.SheetNames[0];
                             updateSummaryProgress(40, 'Converting Excel data...');
-                            data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-                                defval: '',
-                                blankrows: false
+                            // XLSX.utils.sheet_to_json by default uses the first row as headers
+                            rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+                                defval: '', // Set default value for empty cells
+                                raw: false // Get formatted cell values, not raw numbers/dates
                             });
                         } else {
                             throw new Error('Unsupported file format. Please use CSV, XLS, or XLSX files.');
@@ -1003,7 +1098,7 @@
                         updateSummaryProgress(20, 'Parsing manual input...');
                         const result = Papa.parse(raw, {
                             header: true,
-                            skipEmptyLines: true,
+                            skipEmptyLines: false,
                             dynamicTyping: true,
                             delimitersToGuess: [',', '\t', '|', ';'],
                             transformHeader: header => header.trim()
@@ -1011,37 +1106,44 @@
                         if (result.errors.length > 0) {
                             console.warn('CSV parsing warnings:', result.errors);
                         }
-                        data = result.data;
+                        rawData = result.data;
                     } else {
                         throw new Error('No file selected and no data pasted. Please upload a file or paste data.');
                     }
-
-                    updateSummaryProgress(50, 'Validating data structure...');
+                    
+                    updateSummaryProgress(50, 'Cleaning and validating data structure...');
                     await new Promise(resolve => setTimeout(resolve, 100));
 
-                    data = validateSummaryData(data);
+                    allSummaryData = cleanAndValidateSummaryData(rawData);
 
-                    updateSummaryProgress(70, 'Processing orders...', `Found ${data.length} rows`);
+                    updateSummaryProgress(70, 'Processing orders...', `Found ${allSummaryData.length} rows`);
                     await new Promise(resolve => setTimeout(resolve, 200));
 
-                    allSummaryData = data;
                     buildSummarySelector();
 
                     updateSummaryProgress(90, 'Finalizing...');
                     await new Promise(resolve => setTimeout(resolve, 100));
 
                     const processingTime = ((Date.now() - processingSummaryStartTime) / 1000).toFixed(1);
-                    updateSummaryProgress(100, 'Complete!', `Processed ${data.length} rows in ${processingTime}s`);
+                    updateSummaryProgress(100, 'Complete!', `Processed ${allSummaryData.length} rows in ${processingTime}s`);
 
                     setTimeout(() => {
                         showSummaryProcessing(false);
-                        let successMessage = `✅ Successfully processed ${data.length} rows.`;
+                        let successMessage = `✅ Successfully processed ${allSummaryData.length} rows.`;
                         if (sourceFileName) {
                             successMessage += ` from ${sourceFileName}`;
                         }
                         showSummaryMessage(successMessage, 'success');
+                        
+                        // After processing, show top performers by default and hide trends
+                        hideAllSummaryOutputs();
+                        document.getElementById('summaryTopPerformers').style.display = 'block';
                         renderSummaryTopPerformers();
+
                         document.getElementById('summaryControls').style.display = 'block';
+                        // Trends are now shown via the dedicated button
+                        // document.getElementById('summaryTrendCharts').style.display = 'block'; 
+                        // document.getElementById('summaryPeakPerformance').style.display = 'block'; 
                     }, 500);
 
                 } catch (error) {
@@ -1187,8 +1289,286 @@
               }
             }
 
+            // New: Render Time-based Trend Charts
+            function renderSummaryTrendCharts() {
+                const dailyOrderCountChartElement = document.getElementById('dailyOrderCountChart');
+                const dailyCompletionRateChartElement = document.getElementById('dailyCompletionRateChart');
+
+                if (window.dailyOrderCountChart instanceof Chart) {
+                    window.dailyOrderCountChart.destroy();
+                }
+                if (window.dailyCompletionRateChart instanceof Chart) {
+                    window.dailyCompletionRateChart.destroy();
+                }
+
+                const dailyTrends = calculateDailyTrends(allSummaryData);
+                const dates = Object.keys(dailyTrends).sort();
+                const totalOrdersPerDay = dates.map(date => dailyTrends[date].totalOrders);
+                const completionRatesPerDay = dates.map(date => {
+                    const total = dailyTrends[date].totalOrders;
+                    const completed = dailyTrends[date].completedOrders;
+                    return total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
+                });
+
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+                const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color');
+                const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color');
+                const successColor = getComputedStyle(document.documentElement).getPropertyValue('--button-success-bg');
+
+
+                if (dates.length > 0) {
+                    window.dailyOrderCountChart = new Chart(dailyOrderCountChartElement, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Total Orders',
+                                data: totalOrdersPerDay,
+                                borderColor: accentColor,
+                                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: { color: textColor }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Daily Total Orders',
+                                    color: textColor
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: textColor },
+                                    grid: { color: borderColor }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: textColor },
+                                    grid: { color: borderColor }
+                                }
+                            }
+                        }
+                    });
+
+                    window.dailyCompletionRateChart = new Chart(dailyCompletionRateChartElement, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Daily Completion Rate (%)',
+                                data: completionRatesPerDay,
+                                borderColor: successColor,
+                                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: { color: textColor }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Daily Completion Rate',
+                                    color: textColor
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: textColor },
+                                    grid: { color: borderColor }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: { color: textColor },
+                                    grid: { color: borderColor }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // New: Function to calculate daily trends
+            function calculateDailyTrends(data) {
+                const dailyStats = {};
+                const orderMap = {};
+                const orderStatusMap = {};
+
+                // First, build a map of unique orders and their final status
+                data.forEach(row => {
+                    const order = row['Order#'];
+                    if (!order) return;
+
+                    const status = (row['Status'] || '').toString().toLowerCase();
+                    const assigned = (row['Assigned_To'] || '').toString().trim();
+
+                    if (!orderMap[order]) orderMap[order] = [];
+                    orderMap[order].push(row);
+
+                    if (!orderStatusMap[order]) {
+                        orderStatusMap[order] = { status: 'in_progress', assignedTo: assigned };
+                    }
+                    if (status.includes('completed')) {
+                        orderStatusMap[order] = { status: 'completed', assignedTo: assigned };
+                    } else if (assigned.toLowerCase().includes('acmgr') || status.includes('ac mgr')) {
+                        if (orderStatusMap[order].status !== 'completed') {
+                            orderStatusMap[order] = { status: 'ac_mgr', assignedTo: assigned };
+                        }
+                    } else if (status.includes('awaiting')) {
+                        if (!['completed', 'ac_mgr'].includes(orderStatusMap[order].status)) {
+                            orderStatusMap[order] = { status: 'awaiting', assignedTo: assigned };
+                        }
+                    }
+                });
+
+                // Now, iterate through unique orders (using Line 1 for date and assignee)
+                // and populate daily stats
+                const processedOrders = new Set(); // To ensure each order is counted once per day
+                data.forEach(row => {
+                    const order = row['Order#'];
+                    // Use 'Order Date' column for date trend
+                    const orderDateStr = row['Order Date']; 
+                    if (!order || !orderDateStr || processedOrders.has(order)) return; // Skip if already counted
+
+                    // Normalize date string to YYYY-MM-DD for consistent keys
+                    let dateKey = '';
+                    try {
+                        let parsedDate = null;
+                        // Attempt to parse as a direct Date object if XLSX.utils.sheet_to_json already converted it
+                        if (orderDateStr instanceof Date && !isNaN(orderDateStr.getTime())) {
+                            parsedDate = orderDateStr;
+                        } else {
+                            const s = String(orderDateStr).trim();
+                            const formats = [
+                                (str) => { // YYYY-MM-DD (ISO-like)
+                                    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                                    return match ? new Date(str) : null;
+                                },
+                                (str) => { // MM/DD/YYYY or MM-DD-YYYY
+                                    const match = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+                                    if (match) {
+                                        const year = match[3].length === 2 ? `20${match[3]}` : match[3];
+                                        return new Date(`${year}-${match[1]}-${match[2]}`); // Converts to YYYY-MM-DD internally
+                                    }
+                                    return null;
+                                },
+                                (str) => { // DD/MM/YYYY or DD-MM-YYYY
+                                    const match = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+                                    if (match) {
+                                        const year = match[3].length === 2 ? `20${match[3]}` : match[3];
+                                        return new Date(`${year}-${match[2]}-${match[1]}`); // Converts to YYYY-MM-DD internally
+                                    }
+                                    return null;
+                                },
+                                (str) => { // YYYY/MM/DD
+                                    const match = str.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+                                    return match ? new Date(str.replace(/\//g, '-')) : null;
+                                },
+                                (str) => { // DD-Mon-YYYY (e.g., 15-Jan-2024) - generic Date constructor
+                                    const date = new Date(str);
+                                    return isNaN(date.getTime()) ? null : date;
+                                }
+                            ];
+
+                            for (const parser of formats) {
+                                parsedDate = parser(s);
+                                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                                    break; // Found a valid date, stop trying formats
+                                }
+                            }
+                        }
+                        
+                        if (parsedDate && !isNaN(parsedDate.getTime())) {
+                            dateKey = parsedDate.toISOString().slice(0, 10); // Ensures YYYY-MM-DD format
+                        } else {
+                            console.warn(`Failed to parse date string: "${orderDateStr}" for Order#: ${order}. Original type: ${typeof orderDateStr}.`);
+                        }
+                    } catch (e) {
+                        console.warn(`Error processing date "${orderDateStr}" for order ${order}:`, e);
+                        return; // Skip this row if date parsing leads to an error
+                    }
+
+                    if (!dateKey) {
+                        console.warn(`Skipping row for Order#: ${order} due to unparsable date: "${orderDateStr}".`);
+                        return; // Skip if date couldn't be parsed after all attempts
+                    }
+
+                    if (!dailyStats[dateKey]) {
+                        dailyStats[dateKey] = { totalOrders: 0, completedOrders: 0 };
+                    }
+
+                    const orderStatus = orderStatusMap[order];
+                    if (orderStatus && orderStatus.status === 'completed' && String(row['Assigned_To'] || '').trim() === orderStatus.assignedTo.trim()) {
+                        dailyStats[dateKey].completedOrders++;
+                    }
+                    dailyStats[dateKey].totalOrders++;
+                    processedOrders.add(order); // Mark order as processed for this day
+                });
+                return dailyStats;
+            }
+
+            // New: Render Peak Performance Analysis
+            function renderPeakPerformanceAnalysis() {
+                const dailyTrends = calculateDailyTrends(allSummaryData);
+                const dates = Object.keys(dailyTrends).sort();
+
+                let peakOrderVolumeDay = null;
+                let maxOrders = -1; // Initialize with -1 to handle zero orders correctly
+                let peakCompletionRateDay = null;
+                let maxCompletionRate = -1; // Initialize with -1 to handle zero completion correctly
+
+                dates.forEach(date => {
+                    const total = dailyTrends[date].totalOrders;
+                    const completed = dailyTrends[date].completedOrders;
+                    const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+                    if (total > maxOrders) {
+                        maxOrders = total;
+                        peakOrderVolumeDay = date;
+                    }
+
+                    // For completion rate, also consider cases where total is 0, implying 0%
+                    if (completionRate > maxCompletionRate) {
+                        maxCompletionRate = completionRate;
+                        peakCompletionRateDay = date;
+                    }
+                });
+
+                const peakOrderVolumeP = document.getElementById('peakOrderVolume');
+                const peakCompletionRateP = document.getElementById('peakCompletionRate');
+                const summaryPeakPerformanceDiv = document.getElementById('summaryPeakPerformance');
+
+                if (peakOrderVolumeDay !== null) { // Check against null, as 0 orders is a valid stat
+                    peakOrderVolumeP.innerHTML = `Highest Order Volume: <strong>${maxOrders} orders</strong> on <strong>${peakOrderVolumeDay}</strong>`;
+                } else {
+                    peakOrderVolumeP.innerHTML = `No data to determine peak order volume.`;
+                }
+
+                if (peakCompletionRateDay !== null) { // Check against null
+                    peakCompletionRateP.innerHTML = `Highest Completion Rate: <strong>${maxCompletionRate.toFixed(1)}%</strong> on <strong>${peakCompletionRateDay}</strong>`;
+                } else {
+                    peakCompletionRateP.innerHTML = `No data to determine peak completion rate.`;
+                }
+
+                // This section's visibility is now managed by showTimeBasedTrends()
+                // summaryPeakPerformanceDiv.style.display = 'block'; 
+            }
+
 
             function generateSummaryReport(name) {
+                hideAllSummaryOutputs(); // Hide other outputs when an individual report is generated
+                document.getElementById('summaryOutput').style.display = 'block'; // Show the output div
+
               try {
                 const line1 = allSummaryData.filter(r => parseInt(r['Line']) === 1 && r['Assigned_To'] && r['Assigned_To'].trim() === name );
                 const orderMap = {};
@@ -1819,19 +2199,22 @@
               document.getElementById('summaryNameInput').value = '';
               document.getElementById('summaryOutput').innerHTML = '';
               clearSummaryMessages();
+              hideAllSummaryOutputs(); // Hide all outputs
+              if (allSummaryData.length > 0) {
+                 document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers again
+              }
             }
 
             function resetSummaryTool() {
                 allSummaryData = [];
-                groupedSummary = {};
                 document.getElementById('summaryFileInput').value = '';
                 document.getElementById('summaryManualInput').value = '';
                 document.getElementById('summaryMessages').innerHTML = '';
                 document.getElementById('summaryProcessing').style.display = 'none';
                 document.getElementById('summaryControls').style.display = 'none';
-                document.getElementById('summaryTopPerformers').style.display = 'none';
-                document.getElementById('summaryLeaderboardContainer').innerHTML = '';
-                document.getElementById('summaryOutput').innerHTML = '';
+                
+                hideAllSummaryOutputs(); // Ensure all output sections are hidden
+
                 document.getElementById('summaryNameInput').value = '';
                 document.getElementById('summaryNameSuggestions').innerHTML = '';
                 document.getElementById('summaryFileNameDisplay').textContent = ''; // Clear file display
@@ -1842,20 +2225,51 @@
                 if (window.summaryTypeChart instanceof Chart) {
                     window.summaryTypeChart.destroy();
                 }
+                if (window.dailyOrderCountChart instanceof Chart) {
+                    window.dailyOrderCountChart.destroy();
+                }
+                if (window.dailyCompletionRateChart instanceof Chart) {
+                    window.dailyCompletionRateChart.destroy();
+                }
             }
+
+            // Function to hide all summary output sections
+            function hideAllSummaryOutputs() {
+                document.getElementById('summaryOutput').style.display = 'none';
+                document.getElementById('summaryTopPerformers').style.display = 'none';
+                document.getElementById('summaryTrendCharts').style.display = 'none';
+                document.getElementById('summaryPeakPerformance').style.display = 'none';
+            }
+
+            // Function to show time-based trends and hide others
+            function showTimeBasedTrends() {
+                if (allSummaryData.length === 0) {
+                    showSummaryMessage('Please process your order data first to view trends.', 'info');
+                    return;
+                }
+
+                hideAllSummaryOutputs(); // Hide all other sections first
+                
+                document.getElementById('summaryTrendCharts').style.display = 'block';
+                document.getElementById('summaryPeakPerformance').style.display = 'block';
+
+                renderSummaryTrendCharts();
+                renderPeakPerformanceAnalysis();
+                showSummaryMessage('📈 Displaying time-based order trends and peak performance insights.', 'info');
+            }
+
 
             // Drag and Drop functionality for Summary Tool
             document.addEventListener('DOMContentLoaded', () => {
                 const uploadArea = document.getElementById('summaryUploadArea');
                 const fileInput = document.getElementById('summaryFileInput');
                 const fileNameDisplay = document.getElementById('summaryFileNameDisplay');
-                const manualInput = document.getElementById('summaryManualInput'); // Define manualInput here
+                const manualInput = document.getElementById('summaryManualInput');
 
                 if (uploadArea && fileInput && fileNameDisplay && manualInput) {
                     // Prevent default drag behaviors
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                         uploadArea.addEventListener(eventName, preventDefaults, false);
-                        // No need for document.body listeners here, it's handled by validator's section
                     });
 
                     // Highlight drop zone when item is dragged over
@@ -1899,8 +2313,7 @@
                     function updateSummaryFileNameDisplay(name) {
                         if (name) {
                             fileNameDisplay.textContent = `File selected: "${name}".`;
-                            // Clear manual input if a file is selected
-                            document.getElementById('summaryManualInput').value = '';
+                            manualInput.value = ''; // Clear manual input if a file is selected
                         } else {
                             fileNameDisplay.textContent = '';
                         }
@@ -1925,7 +2338,7 @@
         <button id="validatorDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
         <div class="container container-validator" style="box-shadow: none;"> <!-- remove duplicate shadow -->
             <h1>✅ Order Data Validator</h1>
-            <div class="input-section">
+            <div class="input-section" id="validationInputSection">
                 <h3>Upload or Paste Data</h3>
                 <div class="upload-area" id="uploadAreaValidator">
                     <p style="font-size: 1.1em; color: var(--text-color); margin-bottom: 20px;">
@@ -1948,6 +2361,7 @@
                     <button onclick="toggleDebugInfo()">🐞 Toggle Debug Info</button>
                 </div>
             </div>
+
 
             <div class="processing" id="spinner" style="display: none;">
                 <div class="spinner"></div>
@@ -1983,6 +2397,7 @@
             let worker = null;
             let workerStartTime;
             let debugMode = false;
+            const expectedValidationColumns = ['Order#', 'Assigned_To', 'Status', 'Start', 'End', 'Reason for Pending', 'Batch Time'];
 
             // --- Web Worker Code as a String (This content runs in a background thread) ---
             const workerCode = `
@@ -2199,7 +2614,7 @@
             }
 
 
-            function triggerAnalysis() {
+            async function triggerAnalysis() {
                 workerStartTime = performance.now();
                 document.getElementById('spinner').style.display = 'flex';
                 document.getElementById('analyzeTime').innerText = '';
@@ -2209,58 +2624,63 @@
 
                 const fileInput = document.getElementById('fileUpload');
                 const csvInput = document.getElementById('csvInput');
-                let dataToProcess = [];
+                let dataRaw = [];
 
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const fileName = file.name.toLowerCase();
+                try {
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        const fileName = file.name.toLowerCase();
 
-                    const reader = new FileReader();
-                    reader.onload = function (evt) {
+                        const reader = new FileReader();
+                        reader.onload = function (evt) {
+                            if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                                const data = new Uint8Array(evt.target.result);
+                                const workbook = XLSX.read(data, { type: 'array' });
+                                const sheetName = workbook.SheetNames[0];
+                                dataRaw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: false });
+                            } else if (fileName.endsWith('.csv')) {
+                                dataRaw = Papa.parse(evt.target.result, { header: false }).data;
+                            } else {
+                                showCustomMessageBox('<strong>Unsupported File Type:</strong> Please upload an XLSX, XLS, or CSV file.', 'info');
+                                document.getElementById('spinner').style.display = 'none';
+                                document.getElementById('errorSection').style.display = 'none'; // Hide if error
+                                return;
+                            }
+                            processParsedDataValidation(dataRaw);
+                        };
+
                         if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-                            const data = new Uint8Array(evt.target.result);
-                            const workbook = XLSX.read(data, { type: 'array' });
-                            const sheetName = workbook.SheetNames[0];
-                            dataToProcess = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: false });
+                            reader.readAsArrayBuffer(file);
                         } else if (fileName.endsWith('.csv')) {
-                            dataToProcess = Papa.parse(evt.target.result, { header: false }).data;
-                        } else {
-                            showCustomMessageBox('<strong>Unsupported File Type:</strong> Please upload an XLSX, XLS, or CSV file.', 'info');
-                            document.getElementById('spinner').style.display = 'none';
-                            document.getElementById('errorSection').style.display = 'none'; // Hide if error
-                            return;
+                            reader.readAsText(file);
                         }
-                        processParsedData(dataToProcess);
-                    };
 
-                    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-                        reader.readAsArrayBuffer(file);
-                    } else if (fileName.endsWith('.csv')) {
-                        reader.readAsText(file);
+                    } else if (csvInput.value.trim() !== "") {
+                        let cleanedCsvText = csvInput.value.replace(/\u00A0/g, ' ').replace(/\n{2,}/g, '\n').trim();
+                        const parseResult = Papa.parse(cleanedCsvText, {
+                            header: false,
+                            skipEmptyLines: true,
+                            dynamicTyping: false,
+                            delimiter: cleanedCsvText.includes('\t') ? '\t' : ''
+                        });
+                        dataRaw = parseResult.data;
+                        if (parseResult.errors.length > 0) {
+                            console.warn("Papa Parse Errors:", parseResult.errors);
+                            showCustomMessageBox('<strong>Warning:</strong> Some issues detected during data parsing from pasted text. Data might be malformed.', 'info');
+                        }
+                        processParsedDataValidation(dataRaw);
+                    } else {
+                        showCustomMessageBox('<strong>No Data:</strong> Please upload a file or paste data in the text area.', 'info');
+                        document.getElementById('spinner').style.display = 'none';
+                        document.getElementById('errorSection').style.display = 'none'; // Hide if no data
                     }
-
-                } else if (csvInput.value.trim() !== "") {
-                    let cleanedCsvText = csvInput.value.replace(/\u00A0/g, ' ').replace(/\n{2,}/g, '\n').trim();
-                    const parseResult = Papa.parse(cleanedCsvText, {
-                        header: false,
-                        skipEmptyLines: true,
-                        dynamicTyping: false,
-                        delimiter: cleanedCsvText.includes('\t') ? '\t' : ''
-                    });
-                    dataToProcess = parseResult.data;
-                    if (parseResult.errors.length > 0) {
-                        console.warn("Papa Parse Errors:", parseResult.errors);
-                        showCustomMessageBox('<strong>Warning:</strong> Some issues detected during data parsing from pasted text. Data might be malformed.', 'info');
-                    }
-                    processParsedData(dataToProcess);
-                } else {
-                    showCustomMessageBox('<strong>No Data:</strong> Please upload a file or paste data in the text area.', 'info');
+                } catch (error) {
                     document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('errorSection').style.display = 'none'; // Hide if no data
+                    showCustomMessageBox(`<strong>Error during data input:</strong> ${error.message}`, 'error');
                 }
             }
 
-            function processParsedData(dataRaw) {
+            function processParsedDataValidation(dataRaw) {
                 if (dataRaw.length === 0 || (dataRaw.length === 1 && dataRaw[0].length === 0)) {
                     showCustomMessageBox('<strong>Empty Data:</strong> No data found to analyze. Please ensure your file or pasted data contains content.', 'info');
                     document.getElementById('spinner').style.display = 'none';
@@ -2279,7 +2699,7 @@
                     return obj;
                 });
 
-                parsedData = cleanAndNormalizeData(parsedData);
+                parsedData = cleanAndNormalizeValidationData(parsedData); // Apply cleaning here
 
                 const requiredColumns = ['Order#', 'Assigned_To', 'Status', 'Start', 'End', 'Reason for Pending', 'Batch Time'];
                 const availableColumns = Object.keys(parsedData[0] || {});
@@ -2309,14 +2729,12 @@
               tbody.innerHTML = "";
               if (errors.length === 0) {
                 tbody.insertAdjacentHTML("beforeend", '<tr><td colspan="4" style="text-align: center;">✨ No errors found!</td></tr>');
-                // document.getElementById('errorSection').style.display = 'block'; // Ensure it's shown even if no errors
                 return;
               }
               errors.forEach(error => {
                 const row = `<tr><td>${error.row}</td><td>${error.order || ''}</td><td>${error.assignee || ''}</td><td>${error.message}</td></tr>`;
                 tbody.insertAdjacentHTML("beforeend", row);
               });
-              // document.getElementById('errorSection').style.display = 'block'; // Ensure it's shown if there are errors
             }
 
             function downloadErrorsAsCSV() {
@@ -2350,31 +2768,41 @@
               initWorker(); // Re-initialize worker on reset
             }
 
-            function cleanAndNormalizeData(data) {
-              return data
-                .filter(row => {
-                  const values = Object.values(row);
-                  return values.some(val => val !== null && val !== undefined && String(val).trim() !== '');
-                })
-                .map(row => {
-                  const normalizedRow = {};
-                  Object.keys(row).forEach(key => {
-                    const normalizedKey = key.trim();
-                    let value = row[key];
-                    
-                    if (value !== null && value !== undefined) {
-                      value = String(value).trim();
-                      if (value.toLowerCase() === 'null' || value.toLowerCase() === 'undefined' || value.trim() === '') {
-                        value = '';
-                      }
-                    } else {
-                      value = '';
-                    }
-                    
-                    normalizedRow[normalizedKey] = value;
+            // Centralized cleaning function for validation tool
+            function cleanAndNormalizeValidationData(data) {
+              // Deep copy to ensure original data is not modified
+              let cleanedData = JSON.parse(JSON.stringify(data));
+
+              // Trim all cell values
+              cleanedData = cleanedData.map(row => {
+                  const newRow = {};
+                  for (const key in row) {
+                      newRow[key] = typeof row[key] === 'string' ? row[key].trim() : row[key];
+                  }
+                  return newRow;
+              });
+
+              // Remove empty rows (rows where all values are empty strings)
+              cleanedData = cleanedData.filter(row => {
+                  return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== '');
+              });
+
+              // Remove empty columns (columns where all values are empty strings)
+              if (cleanedData.length > 0) {
+                  const allColumns = Object.keys(cleanedData[0]);
+                  const columnsToKeep = allColumns.filter(col =>
+                      cleanedData.some(row => row[col] !== null && row[col] !== undefined && String(row[col]).trim() !== '')
+                  );
+                  cleanedData = cleanedData.map(row => {
+                      const newRow = {};
+                      columnsToKeep.forEach(col => {
+                          newRow[col] = row[col];
+                      });
+                      return newRow;
                   });
-                  return normalizedRow;
-                });
+              }
+
+              return cleanedData;
             }
 
             function toggleDebugInfo() {
@@ -2420,8 +2848,9 @@
                 const uploadArea = document.getElementById('uploadAreaValidator');
                 const fileInput = document.getElementById('fileUpload');
                 const fileNameDisplay = document.getElementById('fileNameDisplay');
+                const csvInput = document.getElementById('csvInput'); // Reference to the CSV input
 
-                if (uploadArea && fileInput && fileNameDisplay) {
+                if (uploadArea && fileInput && fileNameDisplay && csvInput) {
                     // Prevent default drag behaviors
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                         uploadArea.addEventListener(eventName, preventDefaults, false);
@@ -2469,10 +2898,19 @@
                     function updateFileNameDisplay(name) {
                         if (name) {
                             fileNameDisplay.textContent = `File selected: "${name}". Click 'Analyze Data' to process.`;
+                            csvInput.value = ''; // Clear manual input if a file is selected
                         } else {
                             fileNameDisplay.textContent = '';
                         }
                     }
+
+                    // Clear file input display when manual input is typed into
+                    csvInput.addEventListener('input', () => {
+                        if (csvInput.value.trim() !== '') {
+                            fileInput.value = ''; // Clear selected file
+                            updateFileNameDisplay('');
+                        }
+                    });
                 }
             });
 
@@ -2515,18 +2953,21 @@
 
                     // Re-render charts to apply new theme colors if in summary tool
                     if (document.getElementById('summaryTool').style.display === 'block' && allSummaryData.length > 0) {
-                        const nameInput = document.getElementById('summaryNameInput');
-                        if (document.getElementById('summaryOutput').innerHTML.trim() !== '' && nameInput.value.trim() !== '') {
-                            generateSummaryReport(nameInput.value.trim());
-                        } else if (window.summaryStatusChart instanceof Chart) {
-                            const statusData = window.summaryStatusChart.data.datasets[0].data;
-                            const statusLabels = window.summaryStatusChart.data.labels;
-                            const typeData = window.summaryTypeChart.data.datasets[0].data;
-                            const typeLabels = window.summaryTypeChart.data.labels;
-
-                            renderSummaryCharts(null,
-                                                Object.fromEntries(statusLabels.map((label, i) => [label, statusData[i]])),
-                                                Object.fromEntries(typeLabels.map((label, i) => [label, typeData[i]])));
+                        // Check which summary output is currently visible and re-render only that one
+                        if (document.getElementById('summaryOutput').style.display === 'block') {
+                            const nameInput = document.getElementById('summaryNameInput');
+                            if (nameInput.value.trim() !== '') {
+                                generateSummaryReport(nameInput.value.trim());
+                            } else {
+                                // Re-render general charts if they were showing (shouldn't be, but as a fallback)
+                                // This case typically won't be hit if outputs are managed well.
+                                // If needed, you'd re-calculate overall status/type counts and call renderSummaryCharts
+                            }
+                        } else if (document.getElementById('summaryTrendCharts').style.display === 'block') {
+                            renderSummaryTrendCharts();
+                            renderPeakPerformanceAnalysis();
+                        } else if (document.getElementById('summaryTopPerformers').style.display === 'block') {
+                             renderSummaryTopPerformers();
                         }
                     }
                 });
@@ -2546,12 +2987,13 @@
 
             if (toolName === 'summary') {
                 document.getElementById('summaryTool').style.display = 'block';
+                resetSummaryTool(); // Reset tool state when opening
             } else if (toolName === 'validation') {
                 document.getElementById('validationTool').style.display = 'block';
                 if (typeof initWorker === 'function' && !worker) {
                     initWorker();
                 }
-                resetTool(); // Ensure validator is reset and error report is hidden on tool entry
+                resetTool(); // Reset tool state when opening
             }
 
             // Ensure the correct toggle button is visible based on the active tool
@@ -2567,20 +3009,12 @@
             });
 
             // This block is for re-rendering charts when a tool becomes visible (e.g., after theme change)
+            // For summary tool, it will now default to showing top performers if data is present.
             if (toolName === 'summary' && allSummaryData.length > 0) {
-                const nameInput = document.getElementById('summaryNameInput');
-                if (document.getElementById('summaryOutput').innerHTML.trim() !== '' && nameInput.value.trim() !== '') {
-                    generateSummaryReport(nameInput.value.trim());
-                } else if (window.summaryStatusChart instanceof Chart) {
-                    const statusData = window.summaryStatusChart.data.datasets[0].data;
-                    const statusLabels = window.summaryStatusChart.data.labels;
-                    const typeData = window.summaryTypeChart.data.datasets[0].data;
-                    const typeLabels = window.summaryTypeChart.data.labels;
-
-                    renderSummaryCharts(null,
-                                        Object.fromEntries(statusLabels.map((label, i) => [label, statusData[i]])),
-                                        Object.fromEntries(typeLabels.map((label, i) => [label, typeData[i]])));
-                }
+                 hideAllSummaryOutputs(); // Clear previous displays
+                 document.getElementById('summaryTopPerformers').style.display = 'block'; // Show top performers
+                 renderSummaryTopPerformers();
+                 document.getElementById('summaryControls').style.display = 'block'; // Ensure controls are visible
             }
         }
 
