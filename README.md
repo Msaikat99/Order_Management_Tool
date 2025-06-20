@@ -49,7 +49,6 @@ Built with modern web technologies, this lightweight yet powerful tool enables t
 
 ## 🌐 Live Demo
 👉 [Click here to access the tool]([https://YOUR_USERNAME.github.io/order-management-tool/](https://msaikat99.github.io/Order_Management_Tool/))  
-*(replace with actual GitHub Pages URL)*
 
 ---
 
