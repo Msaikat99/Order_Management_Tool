@@ -339,7 +339,7 @@
 
 
         /* Tool Specific Section Styling */
-        .input-section, .chart-container, .debug-info, #errorSection, #summaryTopPerformers, .insights-section {
+        .input-section, .chart-container, .debug-info, #errorSection, #summaryTopPerformers, .insights-section, .guide-content-section {
             background: var(--container-bg); /* Use container bg for internal sections */
             padding: 25px;
             border-radius: 10px;
@@ -848,7 +848,7 @@
         <!-- Dark Mode Toggle (now global) -->
         <button id="globalDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
         <div class="app-header">
-            <h1>📦 Order Management Suite</h1>
+            <h1>📦 Order Management Tool — Premier Packaging</h1>
             <p>The Order Management Tool is a web-based solution designed for the Premier Packaging project under ActioHX. It streamlines daily order tracking, performance analytics, and data validation — all in a single interface.</p>
             <p>Built with modern web technologies, this lightweight yet powerful tool enables the Operations team to visualize, validate, and export order data with zero installation and 100% browser-based execution.</p>
         </div>
@@ -864,7 +864,7 @@
                     <li>Export comprehensive Excel reports.</li>
                     <li>Time-based Order Trends & Peak Performance Analysis.</li>
                 </ul>
-                <button onclick="launchToolWithLoader('summary')">Launch SummaryX</button>
+                <button onclick="launchToolWithLoader('summary')">Launch Summary Tool</button>
             </div>
             <div class="tool-card">
                 <h2>✅ ValidatorPro</h2>
@@ -874,7 +874,18 @@
                     <li>Highlights discrepancies for easy review.</li>
                     <li>Exports a clean error report in tabular format.</li>
                 </ul>
-                <button onclick="launchToolWithLoader('validation')">Launch ValidatorPro</button>
+                <button onclick="launchToolWithLoader('validation')">Launch Validation Tool</button>
+            </div>
+            <!-- New Guide Book Card -->
+            <div class="tool-card">
+                <h2>📖 Guide Book</h2>
+                <ul>
+                    <li>Learn how to use SummaryX and ValidatorPro.</li>
+                    <li>Understand expected data formats and features.</li>
+                    <li>Get tips for optimal tool usage.</li>
+                    <li>Quick start for new users.</li>
+                </ul>
+                <button onclick="showGuideBook()">Open Guide Book</button>
             </div>
         </div>
         <footer class="startup-footer">
@@ -891,6 +902,59 @@
         <div class="loader-text" id="loaderText">Loading tool...</div>
         <div class="progress-bar">
             <div class="progress-fill" id="loaderProgressFill"></div>
+        </div>
+    </div>
+
+    <!-- Guide Book Section -->
+    <div id="guideBook" class="tool-container" style="display: none;">
+        <button onclick="showOptions()" class="back-to-options-btn">← Back to Options</button>
+        <button id="guideDarkModeToggle" class="global-dark-mode-toggle">🌙 Dark Mode</button>
+        <div class="container container-guide">
+            <h1 style="display: flex; align-items: center; gap: 10px;">📖 Guide Book</h1>
+            <p style="margin-bottom: 25px; color: var(--light-text-color);">A comprehensive guide to using the Order Management Tool's features effectively.</p>
+
+            <div class="guide-content-section">
+                <h2>Overview of the Tool</h2>
+                <p>The Order Management Tool is a web-based solution designed for the Premier Packaging project under ActioHX. It streamlines daily order tracking, performance analytics, and data validation — all in a single interface.</p>
+                <p>Built with modern web technologies, this lightweight yet powerful tool enables the Operations team to visualize, validate, and export order data with zero installation and 100% browser-based execution.</p>
+            </div>
+
+            <div class="guide-content-section">
+                <h2>✨ Key Features</h2>
+                <h3 style="color: var(--accent-color);">🔹 SummaryX (Order Summary Tool)</h3>
+                <ul>
+                    <li>Generate detailed performance reports by assignee.</li>
+                    <li>Identify single vs. multi-line orders.</li>
+                    <li>Visualize order status and type distribution.</li>
+                    <li>Detect top performers across various metrics.</li>
+                    <li>Export comprehensive Excel reports.</li>
+                    <li>Time-based Order Trends & Peak Performance Analysis.</li>
+                </ul>
+
+                <h3 style="color: var(--accent-color);">🔸 ValidatorPro (Order Validation Tool)</h3>
+                <ul>
+                    <li>Detect errors in batch time vs. order status logic.</li>
+                    <li>Identify missing or incorrect “Reason for Pending.”</li>
+                    <li>Highlights discrepancies for easy review.</li>
+                    <li>Exports a clean error report in tabular format.</li>
+                </ul>
+            </div>
+
+            <div class="guide-content-section">
+                <h2>🔄 How to Use</h2>
+                <ol>
+                    <li><strong>Upload Data:</strong> Drag & Drop or upload your Excel/CSV order data into the designated area. You can also paste CSV data directly into the text area.</li>
+                    <li><strong>Choose the Tool:</strong> From the main startup page, select either "Summary Tool" for analytics or "Validation Tool" for error detection.</li>
+                    <li><strong>Process Data:</strong> Click the "Process Data" button within your chosen tool.</li>
+                    <li><strong>View Results:</strong> Visuals, stats, and reports will be dynamically generated. For SummaryX, you can view overall top performers, search for individual assignee reports, or toggle to "Trend Analysis." For ValidatorPro, a table of detected errors will be displayed.</li>
+                    <li><strong>Export Reports:</strong> Use the provided "Export" buttons to download comprehensive Excel reports (for SummaryX) or error logs (for ValidatorPro).</li>
+                </ol>
+                <p style="font-style: italic; color: var(--light-text-color);"><strong>Note:</strong> No backend or server-side code is involved. All processing is done securely in-browser for data security.</p>
+            </div>
+
+            <div class="footer-credit">
+                ✦ Created by Saikat Majumder © 2025
+            </div>
         </div>
     </div>
 
@@ -1102,7 +1166,7 @@
                 const missingColumns = expectedSummaryColumns.filter(col => !finalHeaders.includes(col));
 
                 if (missingColumns.length > 0) {
-                    throw new Error(`Missing required columns: ${missingColumns.join(', ')}. Please ensure they are present and correctly spelled in your file header.`);
+                    throw new Error(`Error processing data: missing required columns: ${missingColumns.join(', ')}. Please ensure they are present and correctly spelled in your file header.`);
                 }
                 
                 console.log('Actual headers found (after normalization, now matching expected names):', Object.keys(normalizedData[0] || {}));
@@ -1503,7 +1567,7 @@
                     const orderDateStr = row['Order Date']; 
                     if (!order || !orderDateStr || processedOrders.has(order)) return; // Skip if already counted
 
-                    // Normalize date string to YYYY-MM-DD for consistent keys
+                    // Normalize date string to ISO-MM-DD for consistent keys
                     let dateKey = '';
                     try {
                         let parsedDate = null;
@@ -3008,6 +3072,7 @@
         function launchToolWithLoader(toolName) {
             showStartupLoader(true, 'Launching...', 10);
             document.getElementById('startupOptions').style.display = 'none';
+            document.getElementById('guideBook').style.display = 'none'; // Hide guide book
 
             // Simulate loading progress
             let progress = 10;
@@ -3043,7 +3108,8 @@
                         const parentTool = toggle.closest('.tool-container') || toggle.closest('.nav-buttons-container');
                         if (parentTool && ((toolName === 'summary' && parentTool.id === 'summaryTool') ||
                                         (toolName === 'validation' && parentTool.id === 'validationTool') ||
-                                        (toolName === 'options' && parentTool.id === 'startupOptions'))) {
+                                        (toolName === 'options' && parentTool.id === 'startupOptions') ||
+                                        (toolName === 'guide' && parentTool.id === 'guideBook'))) { // Added guide book
                             toggle.style.display = 'block';
                         } else {
                             toggle.style.display = 'none';
@@ -3078,6 +3144,11 @@
             const validatorToggle = document.getElementById('validatorDarkModeToggle');
             if (validatorToggle) {
                 allDarkModeToggles.push(validatorToggle);
+            }
+            // Add the guide book toggle
+            const guideToggle = document.getElementById('guideDarkModeToggle');
+            if (guideToggle) {
+                allDarkModeToggles.push(guideToggle);
             }
 
             // Attach event listener to all toggles
@@ -3125,9 +3196,11 @@
             // It sets the visibility of the tools directly without the loader sequence.
             const summaryTool = document.getElementById('summaryTool');
             const validationTool = document.getElementById('validationTool');
+            const guideBook = document.getElementById('guideBook'); // Get guide book element
             
             summaryTool.style.display = 'none';
             validationTool.style.display = 'none';
+            guideBook.style.display = 'none'; // Hide guide book initially
 
             if (toolName === 'summary') {
                 summaryTool.style.display = 'block';
@@ -3136,6 +3209,8 @@
                 if (typeof initWorker === 'function' && !worker) {
                     initWorker();
                 }
+            } else if (toolName === 'guide') { // Handle guide book visibility
+                guideBook.style.display = 'block';
             }
 
             // Ensure the correct toggle button is visible based on the active tool
@@ -3143,7 +3218,8 @@
                 const parentTool = toggle.closest('.tool-container') || toggle.closest('.nav-buttons-container');
                 if (parentTool && ((toolName === 'summary' && parentTool.id === 'summaryTool') ||
                                    (toolName === 'validation' && parentTool.id === 'validationTool') ||
-                                   (toolName === 'options' && parentTool.id === 'startupOptions'))) {
+                                   (toolName === 'options' && parentTool.id === 'startupOptions') ||
+                                   (toolName === 'guide' && parentTool.id === 'guideBook'))) { // Added guide book
                     toggle.style.display = 'block';
                 } else {
                     toggle.style.display = 'none';
@@ -3155,6 +3231,7 @@
             document.getElementById('startupOptions').style.display = 'flex';
             document.getElementById('summaryTool').style.display = 'none';
             document.getElementById('validationTool').style.display = 'none';
+            document.getElementById('guideBook').style.display = 'none'; // Hide guide book
             resetSummaryTool();
             resetTool();
             // Ensure only the startup toggle is visible
@@ -3166,6 +3243,24 @@
                 }
             });
         }
+
+        // New function to show Guide Book
+        function showGuideBook() {
+            document.getElementById('startupOptions').style.display = 'none';
+            document.getElementById('summaryTool').style.display = 'none';
+            document.getElementById('validationTool').style.display = 'none';
+            document.getElementById('guideBook').style.display = 'block'; // Show guide book
+
+            // Ensure the guide book's dark mode toggle is visible
+            allDarkModeToggles.forEach(toggle => {
+                if (toggle.closest('.tool-container') && toggle.closest('.tool-container').id === 'guideBook') {
+                    toggle.style.display = 'block';
+                } else {
+                    toggle.style.display = 'none';
+                }
+            });
+        }
+
 
         document.addEventListener('DOMContentLoaded', () => {
             // Initial call to set up toggles and event listeners
