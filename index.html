@@ -876,6 +876,44 @@
             transform: translateY(0);
         }
 
+        /* New styles for error report header (flex container) */
+        .error-report-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Pushes items to ends */
+            margin-bottom: 15px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 10px; /* Space between elements on wrap */
+        }
+
+        .error-report-header h3 {
+            margin: 0; /* Remove default margin to align properly */
+            display: flex; /* For icon alignment */
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-report-header .error-info {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Space between count and button */
+        }
+
+        .error-count {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--error-text);
+            padding: 5px 10px;
+            background-color: var(--error-bg);
+            border-radius: 6px;
+            border: 1px solid var(--button-danger-bg);
+            display: none; /* Initially hidden */
+        }
+
+        .error-download-btn {
+            display: none; /* Initially hidden */
+        }
+
 
         /* Responsiveness */
         @media (max-width: 768px) {
@@ -919,6 +957,18 @@
             .back-to-options-btn {
                 top: 15px; /* Adjust for smaller screens */
                 left: 15px;
+            }
+            .error-report-header {
+                flex-direction: column; /* Stack on small screens */
+                align-items: flex-start;
+            }
+            .error-report-header .error-info {
+                width: 100%;
+                justify-content: space-between; /* Space out count and button */
+                margin-top: 10px;
+            }
+            .error-download-btn {
+                flex-grow: 1; /* Make button fill available space */
             }
         }
     </style>
@@ -2789,7 +2839,14 @@
             <span class="icon"></span> <span>Dark Mode</span>
         </button>
         <div class="container container-validator" style="box-shadow: none;"> <!-- remove duplicate shadow -->
-            <h1><span class="icon" data-lucide="check-circle"></span> ValidatorPro</h1>
+            <div class="header-section">
+                <h1 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span class="icon" data-lucide="check-circle"></span> ValidatorPro
+                </h1>
+                <p style="margin: 5px 0 0 0; color: var(--light-text-color); font-size: 1em; transition: color 0.3s ease;">
+                    Automated Order Data Validation & Error Reporting
+                </p>
+            </div>
             <div class="input-section" id="validationInputSection">
                 <h3>Upload or Paste Data</h3>
                 <div class="upload-area" id="uploadAreaValidator">
@@ -2809,9 +2866,6 @@
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
                     <button onclick="triggerAnalysis()">
                         <span class="icon" data-lucide="scan-eye"></span> Analyze Data
-                    </button>
-                    <button onclick="downloadErrorsAsCSV()">
-                        <span class="icon" data-lucide="download"></span> Download Errors
                     </button>
                     <button onclick="resetTool()">
                         <span class="icon" data-lucide="rotate-ccw"></span> Reset
@@ -2837,7 +2891,12 @@
             </div>
 
             <div id="errorSection" class="fade-in-section" style="display: none;">
-                <h3 style="color: var(--text-color);"><span class="icon" data-lucide="alert-triangle"></span> Error Report:</h3>
+                <div class="error-report-header">
+                    <h3><span class="icon" data-lucide="alert-triangle"></span> Error Report: <span id="errorCountDisplay" class="error-count"></span></h3>
+                    <button onclick="downloadErrorsAsCSV()" class="export-btn error-download-btn" id="downloadErrorsBtn">
+                        <span class="icon" data-lucide="download"></span> Download Errors
+                    </button>
+                </div>
                 <table id="errorTable">
                     <thead>
                         <tr><th>Row (Original)</th><th>Order#</th><th>Assigned_To</th><th>Error Message</th></tr>
@@ -3041,7 +3100,7 @@
                     displayErrors(errorLog);
 
                     document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('analyzeTime').innerText = `Analyzed in ${(end - workerStartTime).toFixed(2)} ms. Found ${errorLog.length} errors.`;
+                    document.getElementById('analyzeTime').innerText = `Analyzed in ${(end - workerStartTime).toFixed(2)} ms.`;
                     URL.revokeObjectURL(blobURL);
                 };
 
@@ -3190,15 +3249,25 @@
 
             function displayErrors(errors) {
               const tbody = document.querySelector("#errorTable tbody");
+              const errorCountDisplay = document.getElementById('errorCountDisplay');
+              const downloadErrorsBtn = document.getElementById('downloadErrorsBtn');
+
               tbody.innerHTML = "";
               if (errors.length === 0) {
                 tbody.insertAdjacentHTML("beforeend", '<tr><td colspan="4" style="text-align: center;">✨ No errors found!</td></tr>');
+                errorCountDisplay.style.display = 'none'; // Hide count if no errors
+                downloadErrorsBtn.style.display = 'none'; // Hide button if no errors
+                document.getElementById('analyzeTime').innerText = `Analyzed in ${(performance.now() - workerStartTime).toFixed(2)} ms. No errors found.`;
                 return;
               }
               errors.forEach(error => {
                 const row = `<tr><td>${error.row}</td><td>${error.order || ''}</td><td>${error.assignee || ''}</td><td>${error.message}</td></tr>`;
                 tbody.insertAdjacentHTML("beforeend", row);
               });
+
+              errorCountDisplay.textContent = `${errors.length} Errors`;
+              errorCountDisplay.style.display = 'inline-block'; // Show count
+              downloadErrorsBtn.style.display = 'inline-flex'; // Show button (using flex for icon alignment)
             }
 
             function downloadErrorsAsCSV() {
@@ -3229,6 +3298,8 @@
               document.getElementById('errorSection').style.display = 'none'; // Hide on reset
               document.getElementById('errorSection').classList.remove('show'); // Remove fade-in
               document.getElementById('fileNameDisplay').textContent = ''; // Clear file display
+              document.getElementById('errorCountDisplay').style.display = 'none'; // Hide error count on reset
+              document.getElementById('downloadErrorsBtn').style.display = 'none'; // Hide download button on reset
               updateDebugInfo();
               initWorker(); // Re-initialize worker on reset
             }
