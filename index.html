@@ -16,6 +16,7 @@
         /* Global CSS Variables for Theming */
         :root {
           --bg-color: #f0f2f5; /* Lighter, modern background */
+          --bg-color-end: #e9eef2; /* Light mode end color for main gradient */
           --container-bg: #ffffff; /* Crisp white for containers */
           --text-color: #333d4d; /* Darker, more professional text */
           --light-text-color: #6a7482; /* Lighter text for secondary info */
@@ -71,10 +72,15 @@
 
           /* Individual Report specific gradient */
           --individual-report-card-bg: linear-gradient(135deg, #7F00FF 0%, #E100FF 100%); /* Purple gradient */
+
+          /* New pattern colors (light mode) */
+          --pattern-color-1: rgba(0, 0, 0, 0.03); /* Very light grey for pattern */
+          --pattern-color-2: rgba(0, 0, 0, 0.01); /* Even lighter for secondary pattern */
         }
 
         [data-theme="dark"] {
           --bg-color: #282c34; /* Dark charcoal background */
+          --bg-color-end: #2e333b; /* Dark mode end color for main gradient */
           --container-bg: #323842; /* Slightly lighter dark for containers */
           --text-color: #e0e6eb; /* Light gray text */
           --light-text-color: #aeb5bf;
@@ -127,6 +133,10 @@
 
           /* Individual Report specific gradient for dark mode */
           --individual-report-card-bg: linear-gradient(135deg, #9370db 0%, #b06edb 100%); /* Lighter purple gradient for dark mode */
+
+          /* New pattern colors (dark mode) */
+          --pattern-color-1: rgba(255, 255, 255, 0.05); /* Very light grey for pattern */
+          --pattern-color-2: rgba(255, 255, 255, 0.02); /* Even lighter for secondary pattern */
         }
 
         /* Base styles & transitions */
@@ -134,16 +144,45 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            transition: background-color 0.4s ease, color 0.4s ease;
             line-height: 1.6;
+            color: var(--text-color); /* Ensure text color reacts to theme */
+
+            /* Main background gradient (animating) */
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--bg-color-end) 100%);
+            background-size: 400% 400%; /* Larger gradient area for animation */
+            animation: gradientBackground 15s ease infinite; /* Slower, smoother animation */
+
+            /* Layered subtle pattern (new addition) */
+            background-image:
+                /* Large, very faint radial circles for diffuse glow */
+                radial-gradient(circle at 10% 20%, var(--pattern-color-1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, var(--pattern-color-1) 0%, transparent 50%),
+                /* Subtle diagonal lines */
+                linear-gradient(45deg, var(--pattern-color-2) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--pattern-color-2) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--pattern-color-2) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--pattern-color-2) 75%);
+            background-size: 60vmin 60vmin, 70vmin 70vmin, 20px 20px, 20px 20px, 20px 20px, 20px 20px; /* Sizes for various patterns */
+            background-position: 0 0, 0 0, 0 0, 0 10px, 10px 10px, 10px 0px; /* Positions for patterns */
+            background-repeat: repeat; /* Ensure pattern tiles */
+            background-blend-mode: overlay; /* Blends nicely with the existing gradient */
+
+            /* Smooth transitions for theme changes affecting background */
+            transition: background-color 0.4s ease, color 0.4s ease, background-image 0.4s ease;
         }
+
+        /* Keyframes for the main background gradient animation */
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
 
         /* General container for startup and tools */
         .nav-buttons-container, .tool-container {
@@ -761,6 +800,24 @@
             color: var(--accent-color);
         }
 
+        /* LLM Loading Spinner */
+        .llm-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--info-text);
+            font-size: 0.95em;
+            margin-top: 15px;
+        }
+        .llm-loading .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
         /* Startup page loader */
         #startupLoader {
             position: fixed;
@@ -988,6 +1045,7 @@
                     <li><strong>Process Data:</strong> Click the "Process Data" button within your chosen tool.</li>
                     <li><strong>View Results:</strong> Visuals, stats, and reports will be dynamically generated. For SummaryX, you can view overall top performers, search for individual assignee reports, or toggle to "Trend Analysis." For ValidatorPro, a table of detected errors will be displayed.</li>
                     <li><strong>Export Reports:</strong> Use the provided "Export" buttons to download comprehensive Excel reports (for SummaryX) or error logs (for ValidatorPro).</li>
+                    <li><strong>AI-Powered Insights:</strong> After processing data in SummaryX, click the "✨ Generate Summary Insights" button for an AI-generated executive summary of your order data.</li>
                 </ol>
                 <p style="font-style: italic; color: var(--light-text-color);"><strong>Note:</strong> No backend or server-side code is involved. All processing is done securely in-browser for data security.</p>
             </div>
@@ -1058,8 +1116,8 @@
                     <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px;">
                         <select id="summaryExportTypeSelector" style="flex: 1; min-width: 180px;">
                             <option value="">Select Report Type</option>
-                            <option value="all">📤 Export All Users Data</option>
-                            <option value="status">📊 Export Status-wise Data</option>
+                            <option value="all">Export All Users Data</option>
+                            <option value="status">Export Status-wise Data</option>
                         </select>
                         <button onclick="handleSummaryExport()" class="export-btn" style="flex-grow: 0;">
                             <span class="icon" data-lucide="download"></span> Export
@@ -1067,6 +1125,10 @@
                         <!-- New button for showing trends -->
                         <button onclick="showTimeBasedTrends()" style="flex-grow: 0; background-color: var(--button-secondary-bg);">
                             <span class="icon" data-lucide="trending-up"></span> Show Trend Analysis
+                        </button>
+                        <!-- New button for LLM Insights -->
+                        <button onclick="generateSummaryInsights()" style="flex-grow: 0; background-color: var(--button-primary-bg);">
+                            <span class="icon" data-lucide="brain"></span> ✨ Generate Summary Insights
                         </button>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
@@ -1107,6 +1169,13 @@
                     <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="zap"></span> Peak Performance Insights</h3>
                     <p id="peakOrderVolume"></p>
                     <p id="peakCompletionRate"></p>
+                </div>
+
+                <!-- LLM Summary Insights -->
+                <div id="llmSummaryInsights" class="insights-section fade-in-section" style="display: none;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-color); transition: color 0.3s ease;"><span class="icon" data-lucide="brain"></span> AI-Powered Insights:</h3>
+                    <div class="llm-loading" id="llmInsightsLoading" style="display:none;"><div class="spinner"></div>Generating insights...</div>
+                    <div id="llmInsightsContent"></div>
                 </div>
 
                 <div class="footer-credit">
@@ -1638,7 +1707,7 @@
                                     const match = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
                                     if (match) {
                                         const year = match[3].length === 2 ? `20${match[3]}` : match[3];
-                                        return new Date(`${year}-${match[1]}-${match[2]}`); // Converts to YYYY-MM-DD internally
+                                        return new Date(`${year}-${match[1]}-${match[2]}`); // Converts to ISO-MM-DD internally
                                     }
                                     return null;
                                 },
@@ -1646,7 +1715,7 @@
                                     const match = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
                                     if (match) {
                                         const year = match[3].length === 2 ? `20${match[3]}` : match[3];
-                                        return new Date(`${year}-${match[2]}-${match[1]}`); // Converts to YYYY-MM-DD internally
+                                        return new Date(`${year}-${match[2]}-${match[1]}`); // Converts to ISO-MM-DD internally
                                     }
                                     return null;
                                 },
@@ -1669,7 +1738,7 @@
                         }
                         
                         if (parsedDate && !isNaN(parsedDate.getTime())) {
-                            dateKey = parsedDate.toISOString().slice(0, 10); // Ensures YYYY-MM-DD format
+                            dateKey = parsedDate.toISOString().slice(0, 10); // Ensures ISO-MM-DD format
                         } else {
                             console.warn(`Failed to parse date string: "${orderDateStr}" for Order#: ${order}. Original type: ${typeof orderDateStr}.`);
                         }
@@ -2398,6 +2467,8 @@
                 document.getElementById('summaryControls').classList.remove('show'); // Remove fade-in
                 
                 hideAllSummaryOutputs(); // Ensure all output sections are hidden
+                document.getElementById('llmSummaryInsights').style.display = 'none'; // Hide LLM insights
+                document.getElementById('llmSummaryInsights').classList.remove('show'); // Remove fade-in
 
                 document.getElementById('summaryNameInput').value = '';
                 document.getElementById('summaryNameSuggestions').innerHTML = '';
@@ -2427,6 +2498,8 @@
                 document.getElementById('summaryTrendCharts').classList.remove('show'); // Remove fade-in
                 document.getElementById('summaryPeakPerformance').style.display = 'none';
                 document.getElementById('summaryPeakPerformance').classList.remove('show'); // Remove fade-in
+                document.getElementById('llmSummaryInsights').style.display = 'none'; // Hide LLM insights
+                document.getElementById('llmSummaryInsights').classList.remove('show'); // Remove fade-in
             }
 
             // Function to show time-based trends and hide others
@@ -2450,6 +2523,187 @@
                 renderSummaryTrendCharts();
                 renderPeakPerformanceAnalysis();
                 showSummaryMessage('📈 Displaying time-based order trends and peak performance insights.', 'info');
+            }
+
+            // New: LLM Integration - Generate Summary Insights
+            async function generateSummaryInsights() {
+                if (allSummaryData.length === 0) {
+                    showSummaryMessage('Please process your order data first to generate insights.', 'info');
+                    return;
+                }
+
+                hideAllSummaryOutputs(); // Hide other outputs
+                const llmInsightsSection = document.getElementById('llmSummaryInsights');
+                const llmInsightsContent = document.getElementById('llmInsightsContent');
+                const llmInsightsLoading = document.getElementById('llmInsightsLoading');
+
+                llmInsightsSection.style.display = 'block';
+                llmInsightsSection.classList.add('show');
+                llmInsightsContent.innerHTML = ''; // Clear previous content
+                llmInsightsLoading.style.display = 'flex'; // Show loading spinner
+
+                showSummaryMessage('✨ Generating AI-powered insights...', 'info');
+
+                try {
+                    // Prepare data for LLM
+                    const totalOrders = allSummaryData.length;
+                    const uniqueAssignees = [...new Set(allSummaryData.map(d => d['Assigned_To']).filter(Boolean))].length;
+
+                    const statusCounts = allSummaryData.reduce((acc, row) => {
+                        const status = row['Status'] || 'Unknown';
+                        acc[status] = (acc[status] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                    const typeCounts = allSummaryData.reduce((acc, row) => {
+                        const type = row['Type'] || 'Unknown';
+                        acc[type] = (acc[type] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                    const assigneePerformance = {};
+                    const orderMap = {};
+                    const orderStatusMap = {};
+
+                    allSummaryData.forEach(row => {
+                        const order = row['Order#'];
+                        if (!order) return;
+                        const status = (row['Status'] || '').toString().toLowerCase();
+                        const assigned = (row['Assigned_To'] || '').toString().trim();
+                        if (!orderMap[order]) orderMap[order] = [];
+                        orderMap[order].push(row);
+
+                        if (!orderStatusMap[order]) {
+                            orderStatusMap[order] = { status: 'in_progress', assignedTo: assigned };
+                        }
+                        if (status.includes('completed')) {
+                            orderStatusMap[order] = { status: 'completed', assignedTo: assigned };
+                        } else if (assigned.toLowerCase().includes('acmgr') || status.includes('ac mgr')) {
+                            if (orderStatusMap[order].status !== 'completed') {
+                                orderStatusMap[order] = { status: 'ac_mgr', assignedTo: assigned };
+                            }
+                        } else if (status.includes('awaiting')) {
+                            if (!['completed', 'ac_mgr'].includes(orderStatusMap[order].status)) {
+                                orderStatusMap[order] = { status: 'awaiting', assignedTo: assigned };
+                            }
+                        }
+                    });
+
+                    for (const orderId in orderMap) {
+                        const rowsForOrder = orderMap[orderId];
+                        const line1Row = rowsForOrder.find(r => parseInt(r['Line']) === 1);
+                        if (!line1Row || !line1Row['Assigned_To']) continue;
+                        const assigneeName = line1Row['Assigned_To'].toString().trim();
+                        const orderStatus = orderStatusMap[orderId];
+
+                        if (!assigneePerformance[assigneeName]) {
+                            assigneePerformance[assigneeName] = { totalOrders: 0, completedOrders: 0 };
+                        }
+
+                        const shouldCountForAssignee = !orderStatus ||
+                                                       orderStatus.assignedTo.trim() === assigneeName ||
+                                                       !['completed', 'ac_mgr'].includes(orderStatus.status);
+
+                        if (shouldCountForAssignee) {
+                            assigneePerformance[assigneeName].totalOrders++;
+                            if (orderStatus && orderStatus.status === 'completed' && orderStatus.assignedTo.trim() === assigneeName) {
+                                assigneePerformance[assigneeName].completedOrders++;
+                            }
+                        }
+                    }
+
+                    const topPerformers = Object.entries(assigneePerformance)
+                        .map(([name, stats]) => ({
+                            name: name,
+                            completed: stats.completedOrders,
+                            totalOrders: stats.totalOrders,
+                            completionRate: stats.totalOrders > 0 ? (stats.completedOrders / stats.totalOrders) * 100 : 0
+                        }))
+                        .sort((a, b) => b.completed - a.completed)
+                        .slice(0, 3); // Get top 3 performers
+
+                    const dailyTrends = calculateDailyTrends(allSummaryData);
+                    let peakOrderVolumeDay = null;
+                    let maxOrders = -1;
+                    let peakCompletionRateDay = null;
+                    let maxCompletionRate = -1;
+
+                    Object.keys(dailyTrends).sort().forEach(date => {
+                        const total = dailyTrends[date].totalOrders;
+                        const completed = dailyTrends[date].completedOrders;
+                        const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+                        if (total > maxOrders) {
+                            maxOrders = total;
+                            peakOrderVolumeDay = date;
+                        }
+                        if (completionRate > maxCompletionRate) {
+                            maxCompletionRate = completionRate;
+                            peakCompletionRateDay = date;
+                        }
+                    });
+                    
+                    const promptData = {
+                        totalOrders,
+                        uniqueAssignees,
+                        statusDistribution: JSON.stringify(statusCounts),
+                        typeDistribution: JSON.stringify(typeCounts),
+                        topPerformers: topPerformers.map(p => `${p.name} (Completed: ${p.completed}, Rate: ${p.completionRate.toFixed(1)}%)`).join(', '),
+                        peakOrderVolume: peakOrderVolumeDay ? `${maxOrders} orders on ${peakOrderVolumeDay}` : 'N/A',
+                        peakCompletionRate: peakCompletionRateDay ? `${maxCompletionRate.toFixed(1)}% on ${peakCompletionRateDay}` : 'N/A'
+                    };
+
+                    const prompt = `Generate a concise executive summary for order performance based on the following data:
+                    - Total Orders Processed: ${promptData.totalOrders}
+                    - Unique Assignees: ${promptData.uniqueAssignees}
+                    - Order Status Distribution: ${promptData.statusDistribution}
+                    - Order Type Distribution: ${promptData.typeDistribution}
+                    - Top Performers (by completed orders): ${promptData.topPerformers || 'None'}
+                    - Peak Order Volume: ${promptData.peakOrderVolume}
+                    - Peak Completion Rate: ${promptData.peakCompletionRate}
+
+                    Highlight key strengths, potential bottlenecks (e.g., high "Awaiting response" status), and overall efficiency. Make it sound professional and actionable.`;
+
+                    // Gemini API call
+                    const chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    // IMPORTANT: The `apiKey` is expected to be provided by the Canvas environment at runtime.
+                    // Do NOT hardcode your API key here or modify this line unless explicitly instructed.
+                    const apiKey = "AIzaSyDeGCnVE8pqZEwG1HpLaRgSsy6jtOdPKPw"; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Gemini API error: ${response.status} - ${errorData.error.message || response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        llmInsightsContent.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`; // Display formatted text
+                        showSummaryMessage('✅ AI-powered insights generated successfully!', 'success');
+                    } else {
+                        llmInsightsContent.innerHTML = `<p>No insights could be generated. The AI returned an empty or malformed response.</p>`;
+                        showSummaryMessage('❌ Failed to generate AI insights. Please try again or check the data.', 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Error generating LLM insights:', error);
+                    llmInsightsContent.innerHTML = `<p>Error generating insights: ${error.message}. Please try again.</p>`;
+                    showSummaryMessage(`❌ Error generating AI insights: ${error.message}`, 'error');
+                } finally {
+                    llmInsightsLoading.style.display = 'none'; // Hide loading spinner
+                    lucide.createIcons(); // Re-render any icons
+                }
             }
 
 
@@ -3271,6 +3525,9 @@
                             renderPeakPerformanceAnalysis();
                         } else if (document.getElementById('summaryTopPerformers').style.display === 'block') {
                              renderSummaryTopPerformers();
+                        } else if (document.getElementById('llmSummaryInsights').style.display === 'block') {
+                             // If LLM insights are already shown, re-generate them with new theme context
+                             generateSummaryInsights();
                         }
                     }
                     lucide.createIcons(); // Important: Re-render Lucide icons after theme change
